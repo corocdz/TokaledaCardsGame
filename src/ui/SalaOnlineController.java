@@ -65,7 +65,7 @@ public class SalaOnlineController {
     private final ResourceBundle bundle = IdiomaManager.getBundle();
 
     @FXML
-    private void initialize() {
+    public void initialize() {
 
         btnIniciarImage.setImage(IdiomaManager.cargarImagen("btnIniciar"));
         btnSalirImage.setImage(IdiomaManager.cargarImagen("btnSalir"));
@@ -420,6 +420,29 @@ public class SalaOnlineController {
             String token = MainApp.usuarioActualToken;
             String codigo = SalaContext.codigoSalaActual;
             String jsonSala = db.leerNodo("salas/" + codigo, token);
+
+            // Detectar si el host mandó volver a la sala
+            String volverSala = db.leerNodo("salas/" + codigo + "/volverSala", token);
+            if (volverSala != null && !volverSala.equals("null")) {
+
+                // Solo los NO-host actúan aquí;
+                // el host ya navegó directamente en el popup
+                String hostUID2 = db.leerNodo("salas/" + codigo + "/host", token)
+                        .replace("\"", "");
+                if (!MainApp.usuarioActualUID.equals(hostUID2)) {
+
+                    if (timer != null) {
+                        timer.cancel();
+                    }
+
+                    // Limpiar el flag para no re-entrar en el bucle
+                    db.borrarNodo("salas/" + codigo + "/volverSala", token);
+
+                    Platform.runLater(()
+                            -> MainApp.cambiarEscena("salaOnline.fxml", 1280, 720));
+                    return;
+                }
+            }
 
             String estado = db.leerNodo("salas/" + codigo + "/partida/estado", token);
 

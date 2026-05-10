@@ -8,8 +8,11 @@ import java.util.*;
 import javafx.animation.FadeTransition;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.geometry.Bounds;
 import javafx.geometry.Pos;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.effect.DropShadow;
@@ -98,6 +101,7 @@ public abstract class PartidaControllerBase {
     protected final List<String> baraja = new ArrayList<>();
     protected final List<String> descarte = new ArrayList<>();
     protected final Map<String, String> nombres = new HashMap<>();
+    private final List<Thread> hilosListeners = new ArrayList<>();
 
     protected boolean partidaFinalizada = false;
     protected boolean repartoInicialHecho = false;
@@ -118,6 +122,24 @@ public abstract class PartidaControllerBase {
     // ─── Animación de mano ────────────────────────────────────────────────────
     protected boolean manoAbierta = false;
     protected int cartaSeleccionada = -1;
+
+    protected volatile boolean controladorDestruido = false;
+
+    /**
+     * Datos que cada modo de juego proporciona para el popup de fin de partida.
+     */
+    public static class DatosPopUp {
+
+        public final String icono;
+        public final String resultado;   // texto principal (ganador, empate...)
+        public final String detalle;     // texto secundario (puntos, vidas...)
+
+        public DatosPopUp(String icono, String resultado, String detalle) {
+            this.icono = icono;
+            this.resultado = resultado;
+            this.detalle = detalle;
+        }
+    }
 
     // =========================================================================
     //  PUNTO DE ENTRADA — igual para todos los modos
@@ -186,13 +208,16 @@ public abstract class PartidaControllerBase {
      */
     protected abstract void onCartaLocalClick(String rutaCarta);
 
+    protected Runnable obtenerCallbackReiniciar() {
+        return null; // null = el popup vuelve a la sala como fallback
+    }
+
     /**
-     * Construye el VBox con el contenido de la pantalla final específico del
-     * modo. La base construye el overlay y llama a este método para obtener el
-     * interior. Ejemplo Pescaito: "Ganador: X con N pescaitos" Ejemplo Yusa:
-     * "¡X es el último superviviente!"
+     * Cada modo devuelve los datos para el popup de fin de partida. Se llama en
+     * un hilo de background desde mostrarPantallaFinal(), así que puede hacer
+     * lecturas de Firebase sin bloquear la UI.
      */
-    protected abstract VBox construirContenidoPantallaFinal();
+    protected abstract DatosPopUp construirDatosPopUpFinal();
 
     // =========================================================================
     //  CARGA INICIAL
@@ -362,53 +387,123 @@ public abstract class PartidaControllerBase {
     // =========================================================================
     private void registrarListenersComunes() {
 
-        // ── Narrador: global y privado ────────────────────────────────────────
-        bd.escucharNarrador(codigoSala, idToken, mensaje
-                -> Platform.runLater(() -> procesarMensajeNarrador(mensaje)));
-
-        // ── Estado "finalizada": todos los clientes muestran la pantalla final ─
-        bd.escucharEstadoPartida(codigoSala, idToken, estado -> {
-            String limpio = estado == null ? "" : estado.replace("\"", "").trim().toLowerCase();
-            if (!"finalizada".equals(limpio)) {
-                return;
-            }
-            if (partidaFinalizada) {
-                return;
-            }
-            Platform.runLater(() -> {
-                partidaFinalizada = true;
-                mostrarPantallaFinal();
-            });
-        });
-
-        // ── Turno global: actualiza uidTurnoActual y delega en el modo ─────────
-        bd.escucharTurno(codigoSala, idToken, nuevoTurno
-                -> Platform.runLater(() -> {
-                    uidTurnoActual = nuevoTurno;
-                    onCambioTurno(nuevoTurno); // cada modo decide qué hacer
-                }));
-
-        // ── Partida: sincronizar manos, baraja y descarte cuando cambian ─────────
-        bd.escucharPartida(codigoSala, idToken, partida -> {
-            Platform.runLater(() -> {
-                try {
-                    if (partida == null) {
+        hilosListeners.add(
+                bd.escucharNarrador(codigoSala, idToken, mensaje
+                        -> Platform.runLater(() -> {
+                    if (controladorDestruido) {
                         return;
                     }
+                    procesarMensajeNarrador(mensaje);
+                }))
+        );
 
-                    Map<String, List<String>> manosBD
-                            = (Map<String, List<String>>) partida.get("manos");
-                    List<String> barajaBD = (List<String>) partida.get("baraja");
-                    List<String> descarteBD = (List<String>) partida.get("descarte");
+        hilosListeners.add(
+                bd.escucharEstadoPartida(codigoSala, idToken, estado -> {
+                    if (controladorDestruido) {
+                        return;
+                    }
+                    String limpio = estado == null ? "" : estado.replace("\"", "").trim().toLowerCase();
+                    if (!"finalizada".equals(limpio)) {
+                        return;
+                    }
+                    if (partidaFinalizada) {
+                        return;
+                    }
+                    Platform.runLater(() -> {
+                        partidaFinalizada = true;
+                        mostrarPantallaFinal();
+                    });
+                })
+        );
 
-                    actualizarDesdeModelo(manosBD, barajaBD, descarteBD);
+        hilosListeners.add(
+                bd.escucharTurno(codigoSala, idToken, nuevoTurno
+                        -> Platform.runLater(() -> {
+                    if (controladorDestruido) {
+                        return;
+                    }
+                    uidTurnoActual = nuevoTurno;
+                    onCambioTurno(nuevoTurno);
+                }))
+        );
 
-                } catch (Exception e) {
-                    e.printStackTrace();
+        hilosListeners.add(
+                bd.escucharPartida(codigoSala, idToken, partida -> {
+                    Platform.runLater(() -> {
+                        if (controladorDestruido) {
+                            return;
+                        }
+                        try {
+                            if (partida == null) {
+                                return;
+                            }
+                            Map<String, List<String>> manosBD = (Map<String, List<String>>) partida.get("manos");
+                            List<String> barajaBD = (List<String>) partida.get("baraja");
+                            List<String> descarteBD = (List<String>) partida.get("descarte");
+                            actualizarDesdeModelo(manosBD, barajaBD, descarteBD);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    });
+                })
+        );
+
+        hilosListeners.add(
+                bd.escucharVolverSala(codigoSala, idToken, ts -> Platform.runLater(() -> {
+            if (controladorDestruido) {
+                return;
+            }
+
+            // NO borrar el flag aquí — lo borra el host desde el popup.
+            // Si cada cliente lo borrara, podría quitárselo a otros clientes
+            // antes de que lo lean.
+            prepararNavegacion();
+            MainApp.cambiarEscena("salaOnline.fxml", 1280, 720);
+        }))
+        );
+
+        /**          *
+         *
+         * hilosListeners.add( bd.escucharVolverSala(codigoSala, idToken, ts ->
+         * Platform.runLater(() -> { if (controladorDestruido) { return; } new
+         * Thread(() -> { try { db.borrarNodo("salas/" + codigoSala +
+         * "/volverSala", idToken); } catch (Exception e) { e.printStackTrace();
+         * } }).start(); if (!MainApp.usuarioActualUID.equals(obtenerUidHost()))
+         * { prepararNavegacion(); MainApp.cambiarEscena("salaOnline.fxml",
+         * 1280, 720); } })) );
+         */
+        hilosListeners.add(
+                bd.escucharNuevaPartida(codigoSala, idToken, modo -> Platform.runLater(() -> {
+            if (controladorDestruido) {
+                return;
+            }
+            if (!partidaFinalizada) {
+                return;
+            }
+            prepararNavegacion();
+            try {
+                FXMLLoader loader = new FXMLLoader(getClass().getResource("/ui/partida.fxml"));
+                PartidaControllerBase controller;
+                if ("Pescaito".equals(modo)) {
+                    controller = new PartidaControllerPescaito();
+                } else if ("Yusa".equals(modo)) {
+                    controller = new PartidaControllerYusa();
+                } else {
+                    System.out.println("WARN: modo desconocido: " + modo);
+                    return;
                 }
-            });
-        });
-
+                loader.setController(controller);
+                Parent root = loader.load();
+                controller.init(codigoSala, MainApp.usuarioActualUID, MainApp.usuarioActualToken);
+                Stage stage = (Stage) overlayFinal.getScene().getWindow();
+                if (stage != null) {
+                    stage.setScene(new Scene(root));
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }))
+        );
     }
 
     // =========================================================================
@@ -447,19 +542,58 @@ public abstract class PartidaControllerBase {
      * subclase en construirContenidoPantallaFinal().
      */
     protected void mostrarPantallaFinal() {
-        overlayFinal.getChildren().clear();
+        // Calcular datos en background (puede leer Firebase)
+        new Thread(() -> {
+            DatosPopUp datos = construirDatosPopUpFinal();
 
-        VBox contenido = construirContenidoPantallaFinal();
-        contenido.setAlignment(Pos.CENTER);
-        contenido.setStyle(
-                "-fx-background-color: rgba(0,0,0,0.75);"
-                + "-fx-padding: 40px;"
-                + "-fx-background-radius: 12;"
-        );
+            Platform.runLater(() -> {
+                try {
+                    FXMLLoader loader = new FXMLLoader(
+                            getClass().getResource("/ui/popUpFinalPartida.fxml"));
+                    // Cargar el FXML — el controller ya está declarado en el fx:controller
+                    StackPane popUpPane = loader.load();
 
-        StackPane.setAlignment(contenido, Pos.CENTER);
-        overlayFinal.getChildren().add(contenido);
-        overlayFinal.setVisible(true);
+                    PopUpFinalPartidaController popUpCtrl = loader.getController();
+
+                    // Recuperar el modo de juego desde Firebase o usar un campo
+                    String modo = ""; // se rellena abajo
+                    try {
+                        Object modoObj = bd.leerCampo(codigoSala, "modo", idToken);
+                        if (modoObj != null) {
+                            modo = modoObj.toString();
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+
+                    popUpCtrl.init(
+                            codigoSala,
+                            uidLocal,
+                            idToken,
+                            modo,
+                            datos.icono,
+                            datos.resultado,
+                            datos.detalle,
+                            obtenerCallbackReiniciar(),
+                            this
+                    );
+
+                    // Insertar en el overlayFinal que ya existe en el FXML de partida
+                    overlayFinal.getChildren().clear();
+                    overlayFinal.getChildren().add(popUpPane);
+                    overlayFinal.setVisible(true);
+
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    // Fallback: mostrar un texto simple si falla el FXML
+                    Label fallback = new Label("La partida ha terminado.");
+                    fallback.setStyle("-fx-text-fill:white;-fx-font-size:24px;");
+                    overlayFinal.getChildren().clear();
+                    overlayFinal.getChildren().add(fallback);
+                    overlayFinal.setVisible(true);
+                }
+            });
+        }).start();
     }
 
     // =========================================================================
@@ -991,5 +1125,41 @@ public abstract class PartidaControllerBase {
             img.setRotate(rots.get(i) - 90);
             zona.getChildren().add(img);
         }
+    }
+
+    private String obtenerUidHost() {
+        try {
+            return db.leerNodo("salas/" + codigoSala + "/host", idToken)
+                    .replace("\"", "");
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "";
+        }
+    }
+
+    /**
+     * Las subclases llaman a esto en registrarListenersPropios() para que
+     * destruir() también interrumpa sus hilos.
+     */
+    protected void registrarHiloListener(Thread hilo) {
+        if (hilo != null) {
+            hilosListeners.add(hilo);
+        }
+    }
+
+    // Método público — para que el popup pueda llamarlo
+    public void destruir() {
+        controladorDestruido = true;
+        int n = hilosListeners.size();
+        for (Thread hilo : hilosListeners) {
+            hilo.interrupt();
+        }
+        hilosListeners.clear();
+        System.out.println("[Base] Controlador destruido. " + n + " listeners parados.");
+    }
+
+// Método privado — para uso interno antes de navegar
+    private void prepararNavegacion() {
+        controladorDestruido = true;
     }
 }

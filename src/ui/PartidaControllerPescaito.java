@@ -84,7 +84,21 @@ public class PartidaControllerPescaito extends PartidaControllerBase {
 
         List<String> manoObjetivo = manos.get(uidRival);
         if (manoObjetivo == null || manoObjetivo.isEmpty()) {
-            narrarPrivado(uidLocal, "Ese jugador no tiene cartas. Elige otro.");
+            // Comprobar si hay algún otro rival con cartas
+            boolean hayOtros = manos.entrySet().stream()
+                    .anyMatch(e -> !e.getKey().equals(uidLocal)
+                    && e.getValue() != null && !e.getValue().isEmpty());
+            if (!hayOtros && !baraja.isEmpty()) {
+                // Nadie tiene cartas → pasar turno automáticamente
+                narrarPrivado(uidLocal, "No hay rivales con cartas. Pasas el turno.");
+                try {
+                    bd.actualizarTurno(codigoSala, obtenerSiguienteJugador(uidTurnoActual), idToken);
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                }
+            } else {
+                narrarPrivado(uidLocal, "Ese jugador no tiene cartas. Elige otro.");
+            }
             return;
         }
 
@@ -109,81 +123,42 @@ public class PartidaControllerPescaito extends PartidaControllerBase {
     }
 
     @Override
-    protected VBox construirContenidoPantallaFinal() {
-        Label titulo = new Label("🎉 La partida ha terminado");
-        titulo.setStyle("-fx-font-size: 32px; -fx-font-weight: bold; -fx-text-fill: white;");
+    protected DatosPopUp construirDatosPopUpFinal() {
+        try {
+            Map<String, Map<String, Object>> pescaitosBD
+                    = bd.leerPescaitos(codigoSala, idToken);
+            Map<String, Integer> puntuaciones
+                    = ((JuegoPescaito) juego).calcularPuntuacionesDesdeBD(pescaitosBD);
 
-        Label ganadorLabel = new Label("Calculando resultado...");
-        ganadorLabel.setStyle("-fx-font-size: 24px; -fx-text-fill: white;");
+            int maxPescaitos = puntuaciones.values().stream()
+                    .max(Integer::compare).orElse(0);
 
-        VBox listaJugadoresBox = new VBox(5);
-        listaJugadoresBox.setStyle("-fx-padding: 10px;");
+            List<String> ganadores = puntuaciones.entrySet().stream()
+                    .filter(e -> e.getValue() == maxPescaitos)
+                    .map(Map.Entry::getKey)
+                    .collect(java.util.stream.Collectors.toList());
 
-        Button volverSala = new Button("Volver a la sala");
+            String resultado;
+            String detalle;
 
-        VBox box = new VBox(20, titulo, ganadorLabel, listaJugadoresBox, volverSala);
+            if (ganadores.size() == 1) {
+                String nombreGanador = nombres.getOrDefault(ganadores.get(0), "Jugador");
+                resultado = "¡" + nombreGanador + " gana!";
+                detalle = maxPescaitos + " pescaito" + (maxPescaitos != 1 ? "s" : "");
+            } else {
+                String nombresEmpatados = ganadores.stream()
+                        .map(uid -> nombres.getOrDefault(uid, "Jugador"))
+                        .collect(java.util.stream.Collectors.joining(", "));
+                resultado = "¡Empate!";
+                detalle = nombresEmpatados + " — " + maxPescaitos + " pescaitos cada uno";
+            }
 
-        // Esperar 2 segundos antes de leer los pescaitos
-        PauseTransition espera = new PauseTransition(Duration.seconds(5));
-        espera.setOnFinished(ev -> {
-            new Thread(() -> {
-                try {
-                    Map<String, Map<String, Object>> pescaitosBD
-                            = bd.leerPescaitos(codigoSala, idToken);
+            return new DatosPopUp("🐟", resultado, detalle);
 
-                    Map<String, Integer> puntuaciones
-                            = ((JuegoPescaito) juego).calcularPuntuacionesDesdeBD(pescaitosBD);
-
-                    // Encontrar el máximo
-                    int maxPescaitos = puntuaciones.values().stream()
-                            .max(Integer::compare).orElse(0);
-
-                    // Buscar todos los que tienen ese máximo
-                    List<String> ganadores = puntuaciones.entrySet().stream()
-                            .filter(e -> e.getValue() == maxPescaitos)
-                            .map(Map.Entry::getKey)
-                            .toList();
-
-                    // Construir texto del ganador
-                    String textoGanador;
-                    if (ganadores.size() == 1) {
-                        String nombreGanador = nombres.getOrDefault(ganadores.get(0), "Jugador");
-                        textoGanador = "Ganador: " + nombreGanador + " (" + maxPescaitos + " pescaitos)";
-                    } else {
-                        String nombresEmpatados = ganadores.stream()
-                                .map(uid -> nombres.getOrDefault(uid, "Jugador"))
-                                .collect(java.util.stream.Collectors.joining(", "));
-                        textoGanador = "¡Empate! " + nombresEmpatados + " (" + maxPescaitos + " pescaitos)";
-                    }
-
-                    // Construir lista completa de jugadores
-                    List<Label> labelsJugadores = new ArrayList<>();
-                    for (String uid : puntuaciones.keySet()) {
-                        String nombre = nombres.getOrDefault(uid, "Jugador");
-                        int puntos = puntuaciones.get(uid);
-
-                        Label lbl = new Label(nombre + ": " + puntos + " pescaitos");
-                        lbl.setStyle("-fx-font-size: 18px; -fx-text-fill: white;");
-                        labelsJugadores.add(lbl);
-                    }
-
-                    Platform.runLater(() -> {
-                        ganadorLabel.setText(textoGanador);
-
-                        listaJugadoresBox.getChildren().clear();
-                        listaJugadoresBox.getChildren().add(new Label("Resultados completos:"));
-                        listaJugadoresBox.getChildren().addAll(labelsJugadores);
-                    });
-
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    Platform.runLater(() -> ganadorLabel.setText("Error al calcular el resultado."));
-                }
-            }).start();
-        });
-        espera.play();
-
-        return box;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new DatosPopUp("🐟", "La partida ha terminado.", "");
+        }
     }
 
     // =========================================================================
@@ -247,6 +222,28 @@ public class PartidaControllerPescaito extends PartidaControllerBase {
 
             case JUGAR_NORMAL:
             default:
+                // Comprobar si hay algún rival con cartas a quien preguntar
+                boolean hayRivalesConCartas = manos.entrySet().stream()
+                        .anyMatch(e -> !e.getKey().equals(uidLocal)
+                        && e.getValue() != null
+                        && !e.getValue().isEmpty());
+
+                if (!hayRivalesConCartas) {
+                    // Nadie tiene cartas — comprobar si hay baraja
+                    if (!baraja.isEmpty()) {
+                        // Hay baraja pero nadie a quien preguntar → pasar turno
+                        // Los demás jugadores robarán automáticamente cuando les llegue
+                        narrarPrivado(uidLocal,
+                                "No hay jugadores con cartas a quien preguntar.\nPasas el turno.");
+                        narrarGlobal(nombres.getOrDefault(uidLocal, "Jugador")
+                                + " pasa turno: no hay rivales con cartas.");
+                        bd.actualizarTurno(codigoSala,
+                                obtenerSiguienteJugador(uidTurnoActual), idToken);
+                    }
+                    return;
+                }
+
+                // Hay rivales con cartas → juego normal
                 activarInteraccion();
                 break;
         }

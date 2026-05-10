@@ -512,7 +512,7 @@ public class JuegoYusa implements Juego {
         for (Map.Entry<String, Integer> entry : vidasBD.entrySet()) {
             vidas.put(entry.getKey(), entry.getValue());
             if (entry.getValue() > 0) {
-                jugadoresVivos.add(entry.getKey());
+                jugadoresVivos.add(entry.getKey()); // solo añadir si tiene vidas
             }
         }
     }

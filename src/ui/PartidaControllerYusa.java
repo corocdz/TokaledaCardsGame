@@ -3,7 +3,9 @@ package ui;
 import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
+import javafx.animation.Animation;
 import javafx.animation.PauseTransition;
+import javafx.animation.ScaleTransition;
 import javafx.application.Platform;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
@@ -45,6 +47,8 @@ public class PartidaControllerYusa extends PartidaControllerBase {
     private long ultimoEstadoTs = -1L;
     private long ultimaDecisionTs = -1L;
     private PauseTransition pausaRevelado = null;
+    // Añade junto a los otros campos de estado:
+    private PauseTransition tickDoce = null;
     /**
      * Lista de UIDs que participan en la ronda de desempate actual. null o
      * vacía = ronda normal (participan todos los vivos).
@@ -62,6 +66,11 @@ public class PartidaControllerYusa extends PartidaControllerBase {
      * los clientes que no participan en el desempate.
      */
     private javafx.scene.layout.StackPane overlayEspectador = null;
+    /**
+     * Overlay de eliminado — se muestra cuando el jugador pierde todas las
+     * vidas
+     */
+    private javafx.scene.layout.StackPane overlayEliminado = null;
 
     // Orden de decisiones en ronda NORMAL, solo usado por el director
     private final List<String> ordenRondaActual = new ArrayList<>();
@@ -74,6 +83,12 @@ public class PartidaControllerYusa extends PartidaControllerBase {
     private static final int MAX_INTENTOS_MANOS = 8;
     private static final int DELAY_REINTENTO_MS = 300;
     private final List<String> colaYusas = new ArrayList<>();
+    /**
+     * Contexto del duelo de yusa pendiente de resolver tras revelar cartas
+     */
+    private String yusaPendientePoseedor = null;
+    private String yusaPendienteObjetivo = null;
+    private JuegoYusa.Palo yusaPendientePalo = null;
 
     // ─── UI ──────────────────────────────────────────────────────────────────
     private HBox panelDecision = null;
@@ -139,7 +154,7 @@ public class PartidaControllerYusa extends PartidaControllerBase {
     protected void registrarListenersPropios() {
 
         // ── Canal principal: estadoRonda ──────────────────────────────────────
-        bd.escucharEstadoRonda(codigoSala, idToken, estado -> Platform.runLater(() -> {
+        registrarHiloListener(bd.escucharEstadoRonda(codigoSala, idToken, estado -> Platform.runLater(() -> {
             if (estado == null) {
                 return;
             }
@@ -168,10 +183,10 @@ public class PartidaControllerYusa extends PartidaControllerBase {
             }
 
             procesarAccion(accion, turnoUid);
-        }));
+        })));
 
         // ── Canal de respuesta: decisionJugador (solo director) ───────────────
-        bd.escucharDecisionJugador(codigoSala, idToken, datos -> Platform.runLater(() -> {
+        registrarHiloListener(bd.escucharDecisionJugador(codigoSala, idToken, datos -> Platform.runLater(() -> {
             if (!uidLocal.equals(uidTurnoActual)) {
                 return;
             }
@@ -195,7 +210,21 @@ public class PartidaControllerYusa extends PartidaControllerBase {
             }
 
             procesarDecisionRecibida(uid, decision);
+        })));
+
+        // Escuchar cambios de vidas — detectar si fui eliminado
+        registrarHiloListener(bd.escucharVidaJugador(codigoSala, uidLocal, idToken, vidas -> {
+            Platform.runLater(() -> {
+                if (controladorDestruido) {
+                    return;
+                }
+                if (vidas == 0 && overlayEliminado == null && !partidaFinalizada) {
+                    System.out.println("[ELIMINADO] Detectado por listener de vidas: " + uidLocal);
+                    mostrarMensajeEliminado();
+                }
+            });
         }));
+
     }
 
     private String s(Map<String, Object> m, String k) {
@@ -325,24 +354,59 @@ public class PartidaControllerYusa extends PartidaControllerBase {
         /* no se usa */ }
 
     @Override
-    protected VBox construirContenidoPantallaFinal() {
-        Label titulo = new Label("🎉 La partida ha terminado");
-        titulo.setStyle("-fx-font-size:30px;-fx-font-weight:bold;-fx-text-fill:white;");
-        Label resultado = new Label("Calculando...");
-        resultado.setStyle("-fx-font-size:22px;-fx-text-fill:white;");
-        Button volver = new Button("Volver a la sala");
-        new Thread(() -> {
-            Map<String, Integer> vidas = yusa().getTodasLasVidas();
-            List<String> s = vidas.entrySet().stream().filter(e -> e.getValue() > 0)
-                    .map(Map.Entry::getKey).collect(Collectors.toList());
-            String txt = s.size() == 1
-                    ? "¡" + nombres.getOrDefault(s.get(0), "Jugador") + " es el último superviviente!"
-                    : s.isEmpty() ? "¡Empate! Nadie sobrevivió."
-                    : "¡Empate entre " + s.stream().map(u -> nombres.getOrDefault(u, u))
-                            .collect(Collectors.joining(", ")) + "!";
-            Platform.runLater(() -> resultado.setText(txt));
-        }).start();
-        return new VBox(20, titulo, resultado, volver);
+    protected DatosPopUp construirDatosPopUpFinal() {
+        // Leer vidas desde Firebase para que TODOS los clientes
+        // vean exactamente el mismo resultado, independientemente
+        // del estado local de cada uno.
+        try {
+            Map<String, Integer> vidasBD = bd.leerVidas(codigoSala, idToken);
+            if (vidasBD != null && !vidasBD.isEmpty()) {
+                // Actualizar también el estado local con los datos reales
+                yusa().cargarVidasDesdeBD(vidasBD);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            // Si falla la lectura, usar el estado local como fallback
+        }
+
+        Map<String, Integer> vidas = yusa().getTodasLasVidas();
+
+        // Encontrar al ganador (el único con vidas > 0)
+        List<String> supervivientes = vidas.entrySet().stream()
+                .filter(e -> e.getValue() > 0)
+                .map(Map.Entry::getKey)
+                .collect(java.util.stream.Collectors.toList());
+
+        String resultado;
+        String detalle;
+
+        if (supervivientes.size() == 1) {
+            String uidGanador = supervivientes.get(0);
+            String nombre = nombres.getOrDefault(uidGanador, "Jugador");
+            int vidasGanador = vidas.getOrDefault(uidGanador, 1);
+            // Siempre el mismo mensaje para todos los clientes
+            resultado = "¡Ha ganado " + nombre + "!";
+            detalle = "Con " + vidasGanador + " vida"
+                    + (vidasGanador != 1 ? "s" : "") + " restante"
+                    + (vidasGanador != 1 ? "s" : "");
+        } else if (supervivientes.isEmpty()) {
+            resultado = "¡Empate!";
+            detalle = "Ningún jugador sobrevivió.";
+        } else {
+            // Más de un superviviente (no debería ocurrir en Yusa normal)
+            // Mostrar al que tiene más vidas
+            String uidMasVidas = supervivientes.stream()
+                    .max(java.util.Comparator.comparingInt(vidas::get))
+                    .orElse(supervivientes.get(0));
+            String nombre = nombres.getOrDefault(uidMasVidas, "Jugador");
+            int vidasMax = vidas.getOrDefault(uidMasVidas, 1);
+            resultado = "¡Ha ganado " + nombre + "!";
+            detalle = "Con " + vidasMax + " vida"
+                    + (vidasMax != 1 ? "s" : "") + " restante"
+                    + (vidasMax != 1 ? "s" : "");
+        }
+
+        return new DatosPopUp("🃏", resultado, detalle);
     }
 
     // =========================================================================
@@ -685,7 +749,7 @@ public class PartidaControllerYusa extends PartidaControllerBase {
 
         new Thread(() -> {
             try {
-                // Leer objetivos de Firebase para asegurar mapa completo
+                // Leer objetivos de Firebase para mapa completo
                 Map<String, String> objetivosFirebase = bd.leerObjetivosYusa(codigoSala, idToken);
                 if (objetivosFirebase != null) {
                     objetivosFirebase.forEach((pos, obj)
@@ -693,13 +757,11 @@ public class PartidaControllerYusa extends PartidaControllerBase {
                 }
 
                 Platform.runLater(() -> {
-                    // El poseedor actual es el primero de la cola
-                    // (que es quien publicó ELEGIR_PALO con este objetivo)
+                    // Poseedor actual = primero de la cola
                     String poseedor = null;
                     if (!colaYusas.isEmpty()) {
                         poseedor = colaYusas.get(0);
                     } else {
-                        // Fallback: buscar por objetivo en el mapa
                         for (Map.Entry<String, String> p : objetivosPorPoseedor.entrySet()) {
                             if (p.getValue().equals(uidObjetivo)) {
                                 poseedor = p.getKey();
@@ -707,13 +769,12 @@ public class PartidaControllerYusa extends PartidaControllerBase {
                             }
                         }
                     }
-
                     if (poseedor == null) {
                         System.out.println("WARN: sin poseedor para " + uidObjetivo);
                         return;
                     }
 
-                    // Obtener carta del poseedor (mano o snapshot)
+                    // Obtener carta del poseedor
                     String cartaPoseedor = null;
                     List<String> mp = manos.get(poseedor);
                     if (mp != null && !mp.isEmpty()) {
@@ -721,51 +782,27 @@ public class PartidaControllerYusa extends PartidaControllerBase {
                     } else {
                         cartaPoseedor = snapshotCartas.get(poseedor);
                     }
-
                     if (cartaPoseedor == null) {
                         System.out.println("WARN: sin carta para " + poseedor);
                         return;
                     }
 
-                    // Resolver el duelo
-                    JuegoYusa.Palo paloReal = yusa().obtenerPaloCarta(cartaPoseedor);
-                    boolean acerto = paloReal == paloEleg;
-                    String perdedor = acerto ? poseedor : uidObjetivo;
-                    boolean eli = yusa().perderVida(perdedor);
+                    // Guardar contexto del duelo para resolver después de revelar
+                    yusaPendientePoseedor = poseedor;
+                    yusaPendienteObjetivo = uidObjetivo;
+                    yusaPendientePalo = paloEleg;
 
-                    // Narrar este duelo específico con contexto de cuántas yusas quedan
-                    int pendientes = colaYusas.size() - 1; // -1 porque este aún está en la cola
-                    narrarGlobal("🎴 Yusa " + nombres.getOrDefault(poseedor, poseedor)
-                            + " → " + nombres.getOrDefault(uidObjetivo, uidObjetivo)
-                            + ": dijo " + paloEleg.name()
-                            + ", era " + paloReal.name() + ". "
-                            + (acerto ? "¡Acertó! " : "¡Falló! ")
-                            + nombres.getOrDefault(perdedor, perdedor)
-                            + " pierde una vida → " + yusa().getVidas(perdedor) + " restantes."
-                            + (pendientes > 0 ? " (" + pendientes + " yusa(s) más)" : ""));
+                    // Guardar snapshot de todas las cartas antes de revelar
+                    guardarSnapshot();
 
-                    if (eli) {
-                        narrarGlobal("¡" + nombres.getOrDefault(perdedor, perdedor) + " eliminado!");
-                    }
-
+                    // Publicar REVELAR_CARTAS — todos verán las cartas 5 segundos
+                    // El PauseTransition de mostrarCartasDeRonda llamará a
+                    // resolverDueloYusaTrasRevelacion() en el director
                     try {
-                        bd.actualizarVidaJugador(codigoSala, perdedor,
-                                yusa().getVidas(perdedor), idToken);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-
-                    // Quitar poseedor de la cola y del mapa
-                    objetivosPorPoseedor.remove(poseedor);
-                    if (!colaYusas.isEmpty()) {
-                        colaYusas.remove(0);
-                    }
-
-                    // Avanzar: siguiente poseedor o cerrar ronda
-                    try {
-                        publicarSiguientePreguntaYusa();
-                    } catch (IOException e) {
-                        e.printStackTrace();
+                        bd.publicarEstadoRonda(codigoSala, "REVELAR_CARTAS",
+                                JuegoYusa.FaseRonda.YUSA.name(), null, idToken);
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
                     }
                 });
 
@@ -958,9 +995,26 @@ public class PartidaControllerYusa extends PartidaControllerBase {
                         + " pierde una vida → " + yusa().getVidas(uid) + " restantes.");
                 if (eli) {
                     narrarGlobal("¡" + nombres.getOrDefault(uid, uid) + " eliminado!");
+                    // Si el eliminado soy yo, mostrar el overlay
+                    if (uid.equals(uidLocal)) {
+                        mostrarMensajeEliminado();
+                    }
                 }
                 bd.actualizarVidaJugador(codigoSala, uid, yusa().getVidas(uid), idToken);
-                incrementarNumeroRonda();
+            } else if (perdedores.size() > 1) {
+                String ne = perdedores.stream()
+                        .map(u -> nombres.getOrDefault(u, u)).collect(Collectors.joining(", "));
+                narrarGlobal("¡Empate entre " + ne + "! Todos pierden una vida.");
+                for (String uid : perdedores) {
+                    boolean eli = yusa().perderVida(uid);
+                    if (eli) {
+                        narrarGlobal("¡" + nombres.getOrDefault(uid, uid) + " eliminado!");
+                        if (uid.equals(uidLocal)) {
+                            mostrarMensajeEliminado();
+                        }
+                    }
+                    bd.actualizarVidaJugador(codigoSala, uid, yusa().getVidas(uid), idToken);
+                }
             }
 
             if (yusa().haTerminado(manos, baraja, descarte)) {
@@ -1009,6 +1063,7 @@ public class PartidaControllerYusa extends PartidaControllerBase {
         empatadosActuales = null;
         enDesempate = false;
         colaYusas.clear();
+        // ocultarMensajeEliminado();
 
         List<String> vivos = ordenJugadoresGlobal.stream()
                 .filter(uid -> yusa().getJugadoresVivos().contains(uid))
@@ -1029,6 +1084,7 @@ public class PartidaControllerYusa extends PartidaControllerBase {
     }
 
     private void resetearEstadoLocal() {
+        detenerTickDoce();
         rondaEnCurso = false;
         faseRondaActual = null;
         snapshotCartas.clear();
@@ -1042,6 +1098,10 @@ public class PartidaControllerYusa extends PartidaControllerBase {
         enDesempate = false;
         ocultarOverlayEspectador();
         colaYusas.clear();
+        ocultarMensajeEliminado();
+        yusaPendientePoseedor = null;
+        yusaPendienteObjetivo = null;
+        yusaPendientePalo = null;
     }
 
     // =========================================================================
@@ -1116,8 +1176,16 @@ public class PartidaControllerYusa extends PartidaControllerBase {
             System.out.println("[YUSA] 5 segundos completados. Ocultando cartas.");
             ocultarCartasDeRonda();
             pausaRevelado = null;
+
             if (uidLocal.equals(uidTurnoActual)) {
-                resolverFinDeRonda();
+                // El director decide qué resolver según la fase
+                if (faseRondaActual == JuegoYusa.FaseRonda.YUSA && yusaPendientePoseedor != null) {
+                    // Ronda YUSA: resolver el duelo pendiente
+                    resolverDueloYusaTrasRevelacion();
+                } else {
+                    // Ronda NORMAL o DOCE: resolver quién pierde vida por carta más baja
+                    resolverFinDeRonda();
+                }
             } else {
                 resetearEstadoLocal();
             }
@@ -1157,6 +1225,7 @@ public class PartidaControllerYusa extends PartidaControllerBase {
     }
 
     private void ocultarPanelDecision() {
+        detenerTickDoce();
         if (panelDecision != null) {
             zonaCentro.getChildren().remove(panelDecision);
             panelDecision = null;
@@ -1183,38 +1252,49 @@ public class PartidaControllerYusa extends PartidaControllerBase {
         zonaCentro.getChildren().add(panelDecision);
     }
 
+    // ── SUSTITUYE mostrarBotonJugarDoce() completo ───────────────────────────
     private void mostrarBotonJugarDoce() {
         if (panelDecision != null) {
             return;
         }
+
         Button btn = new Button("Jugar carta (10s)");
         btn.setStyle("-fx-font-size:14px;-fx-padding:8 18;");
         int[] seg = {10};
+
         Runnable jugar = () -> {
+            detenerTickDoce();       // ← siempre parar el tick antes de actuar
             ocultarPanelDecision();
             onDoceJugado();
         };
-        PauseTransition tick = new PauseTransition(Duration.seconds(1));
-        tick.setOnFinished(ev -> {
+
+        tickDoce = new PauseTransition(Duration.seconds(1));
+        tickDoce.setOnFinished(ev -> {
             seg[0]--;
             btn.setText("Jugar carta (" + seg[0] + "s)");
             if (seg[0] > 0) {
-                tick.playFromStart();
+                tickDoce.playFromStart();
             } else {
                 jugar.run();
             }
         });
-        btn.setOnAction(e -> {
-            tick.stop();
-            jugar.run();
-        });
+
+        btn.setOnAction(e -> jugar.run());  // jugar.run() ya para el tick
+
         panelDecision = new HBox(btn);
         panelDecision.setAlignment(Pos.CENTER);
         StackPane.setAlignment(panelDecision, Pos.BOTTOM_CENTER);
         panelDecision.setTranslateY(-40);
         zonaCentro.getChildren().add(panelDecision);
-        tick.play();
+        tickDoce.play();
         narrarPrivado(uidLocal, "Tienes un 12. Pulsa 'Jugar carta'. (10s)");
+    }
+
+    private void detenerTickDoce() {
+        if (tickDoce != null) {
+            tickDoce.stop();
+            tickDoce = null;
+        }
     }
 
     // =========================================================================
@@ -1393,6 +1473,156 @@ public class PartidaControllerYusa extends PartidaControllerBase {
             return;
         }
         cerrarRondaYusa();
+    }
+
+    /**
+     * Muestra un overlay rojo persistente con el mensaje "ESTÁS ELIMINADO".
+     * Incluye una animación de pulso (crece/encoge en loop) para llamar la
+     * atención. El overlay se queda visible hasta que se muestre la pantalla
+     * final. Solo aparece si el jugador local ha sido eliminado.
+     */
+    // ── SUSTITUYE mostrarMensajeEliminado() completo ─────────────────────────
+    // Soluciona: overlay que desaparece al actualizarInterfaz() y fuente
+    private void mostrarMensajeEliminado() {
+        System.out.println("[ELIMINADO] mostrarMensajeEliminado() llamado para: " + uidLocal);
+
+        // Limpiar anterior si existía
+        if (overlayEliminado != null) {
+            overlayFinal.getChildren().remove(overlayEliminado);
+            overlayEliminado = null;
+        }
+
+        Label lblEliminado = new Label("💀 ESTÁS ELIMINADO");
+        lblEliminado.setStyle(
+                "-fx-font-size:38px;"
+                + "-fx-font-weight:bold;"
+                + "-fx-text-fill:#ff2222;"
+                + "-fx-effect:dropshadow(gaussian,rgba(0,0,0,0.95),14,0.7,0,0);");
+
+        Label lblSub = new Label("Espera a que termine la partida");
+        lblSub.setStyle(
+                "-fx-font-size:18px;"
+                + "-fx-text-fill:#ffaaaa;");
+
+        VBox contenido = new VBox(12, lblEliminado, lblSub);
+        contenido.setAlignment(Pos.CENTER);
+        contenido.setStyle("-fx-background-color:transparent;");
+
+        overlayEliminado = new StackPane(contenido);
+        overlayEliminado.setStyle("-fx-background-color:transparent;");
+        overlayEliminado.setPickOnBounds(false);
+        overlayEliminado.prefWidthProperty().bind(overlayFinal.widthProperty());
+        overlayEliminado.prefHeightProperty().bind(overlayFinal.heightProperty());
+
+        // Añadir al overlayFinal ANTES del popup para que quede debajo si llega la final
+        overlayFinal.getChildren().add(0, overlayEliminado); // índice 0 = debajo de todo
+        overlayFinal.setVisible(true);
+
+        ScaleTransition pulso = new ScaleTransition(Duration.seconds(1.0), contenido);
+        pulso.setFromX(1.0);
+        pulso.setFromY(1.0);
+        pulso.setToX(1.10);
+        pulso.setToY(1.10);
+        pulso.setAutoReverse(true);
+        pulso.setCycleCount(Animation.INDEFINITE);
+        pulso.play();
+
+        System.out.println("[ELIMINADO] Overlay añadido a overlayFinal. Hijos: "
+                + overlayFinal.getChildren().size());
+    }
+
+    /**
+     * Quita el overlay de eliminado (se llama si la partida termina y aparece
+     * el popup final)
+     */
+    // ── SUSTITUYE ocultarMensajeEliminado() ──────────────────────────────────
+    private void ocultarMensajeEliminado() {
+        if (overlayEliminado != null) {
+            overlayFinal.getChildren().remove(overlayEliminado);
+            // Si overlayFinal no tiene más hijos visibles, ocultarlo
+            if (overlayFinal.getChildren().isEmpty()) {
+                overlayFinal.setVisible(false);
+            }
+            overlayEliminado = null;
+        }
+    }
+
+    /**
+     * Resuelve el duelo de yusa pendiente tras haber mostrado las cartas 5s.
+     * Solo lo ejecuta el director.
+     */
+    private void resolverDueloYusaTrasRevelacion() {
+        if (yusaPendientePoseedor == null) {
+            return;
+        }
+
+        String poseedor = yusaPendientePoseedor;
+        String objetivo = yusaPendienteObjetivo;
+        JuegoYusa.Palo paloEleg = yusaPendientePalo;
+
+        // Limpiar contexto pendiente
+        yusaPendientePoseedor = null;
+        yusaPendienteObjetivo = null;
+        yusaPendientePalo = null;
+
+        // Obtener carta del poseedor desde snapshot o mano
+        String cartaPoseedor = snapshotCartas.getOrDefault(poseedor, null);
+        if (cartaPoseedor == null) {
+            List<String> mp = manos.get(poseedor);
+            if (mp != null && !mp.isEmpty()) {
+                cartaPoseedor = mp.get(0);
+            }
+        }
+        if (cartaPoseedor == null) {
+            System.out.println("WARN: sin carta para resolver duelo yusa de " + poseedor);
+            try {
+                publicarSiguientePreguntaYusa();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return;
+        }
+
+        JuegoYusa.Palo paloReal = yusa().obtenerPaloCarta(cartaPoseedor);
+        boolean acerto = paloReal == paloEleg;
+        String perdedor = acerto ? poseedor : objetivo;
+        boolean eli = yusa().perderVida(perdedor);
+
+        int pendientes = colaYusas.size() - 1;
+        narrarGlobal("🎴 Yusa " + nombres.getOrDefault(poseedor, poseedor)
+                + " → " + nombres.getOrDefault(objetivo, objetivo)
+                + ": dijo " + paloEleg.name()
+                + ", era " + paloReal.name() + ". "
+                + (acerto ? "¡Acertó! " : "¡Falló! ")
+                + nombres.getOrDefault(perdedor, perdedor)
+                + " pierde una vida → " + yusa().getVidas(perdedor) + " restantes."
+                + (pendientes > 0 ? " (" + pendientes + " yusa(s) más)" : ""));
+
+        if (eli) {
+            narrarGlobal("¡" + nombres.getOrDefault(perdedor, perdedor) + " eliminado!");
+            if (perdedor.equals(uidLocal)) {
+                Platform.runLater(this::mostrarMensajeEliminado);
+            }
+        }
+
+        try {
+            bd.actualizarVidaJugador(codigoSala, perdedor, yusa().getVidas(perdedor), idToken);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        // Quitar poseedor de la cola y del mapa
+        objetivosPorPoseedor.remove(poseedor);
+        if (!colaYusas.isEmpty()) {
+            colaYusas.remove(0);
+        }
+
+        // Siguiente yusa o cerrar ronda
+        try {
+            publicarSiguientePreguntaYusa();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
 }
