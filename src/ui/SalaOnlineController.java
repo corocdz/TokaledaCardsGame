@@ -67,6 +67,8 @@ public class SalaOnlineController {
     @FXML
     public void initialize() {
 
+        Platform.runLater(() -> Animaciones.fadeInPro(rootSala));
+        
         btnIniciarImage.setImage(IdiomaManager.cargarImagen("btnIniciar"));
         btnSalirImage.setImage(IdiomaManager.cargarImagen("btnSalir"));
 

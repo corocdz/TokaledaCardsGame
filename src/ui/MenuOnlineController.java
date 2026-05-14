@@ -60,6 +60,8 @@ public class MenuOnlineController {
     @FXML
     private void initialize() {
 
+        Platform.runLater(() -> Animaciones.fadeInPro(rootMenu));        
+        
         // Cargar imagen
         logoImage.setImage(new Image(
                 getClass().getResource("/ui/graphicResources/imagenes/tokaledaCardsGame.png").toExternalForm()

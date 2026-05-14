@@ -29,49 +29,76 @@ public class FirebaseAuthService {
     }
 
     // ---------------- REGISTRO ----------------
-    public boolean register(String email, String password) throws IOException {
+    public String register(String email, String password) throws IOException {
         AuthRequest request = new AuthRequest(email, password, true);
         String jsonRequest = gson.toJson(request);
 
         String jsonResponse = postJson(SIGN_UP_URL, jsonRequest);
-
         if (jsonResponse == null) {
-            return false;
+            return "NETWORK_ERROR";
         }
 
-        AuthResponse response = gson.fromJson(jsonResponse, AuthResponse.class);
-
-        if (response.idToken != null) {
+        // Si contiene idToken → registro correcto
+        if (jsonResponse.contains("idToken")) {
+            AuthResponse response = gson.fromJson(jsonResponse, AuthResponse.class);
             this.idToken = response.idToken;
             this.localId = response.localId;
-            return true;
-        } else {
-            System.out.println("Error en registro: " + jsonResponse);
-            return false;
+            return "OK";
         }
+
+        // Interpretar errores de Firebase
+        if (jsonResponse.contains("EMAIL_EXISTS")) {
+            return "EMAIL_EXISTS";
+        }
+        if (jsonResponse.contains("INVALID_EMAIL")) {
+            return "INVALID_EMAIL";
+        }
+        if (jsonResponse.contains("WEAK_PASSWORD")) {
+            return "WEAK_PASSWORD";
+        }
+        if (jsonResponse.contains("MISSING_PASSWORD")) {
+            return "MISSING_PASSWORD";
+        }
+
+        return "UNKNOWN_ERROR";
     }
 
     // ---------------- LOGIN ----------------
-    public boolean login(String email, String password) throws IOException {
+    public String login(String email, String password) throws IOException {
         AuthRequest request = new AuthRequest(email, password, true);
         String jsonRequest = gson.toJson(request);
 
         String jsonResponse = postJson(SIGN_IN_URL, jsonRequest);
-
         if (jsonResponse == null) {
-            return false;
+            return "NETWORK_ERROR";
         }
 
-        AuthResponse response = gson.fromJson(jsonResponse, AuthResponse.class);
-
-        if (response.idToken != null) {
+        // Login correcto
+        if (jsonResponse.contains("idToken")) {
+            AuthResponse response = gson.fromJson(jsonResponse, AuthResponse.class);
             this.idToken = response.idToken;
             this.localId = response.localId;
-            return true;
-        } else {
-            System.out.println("Error en login: " + jsonResponse);
-            return false;
+            return "OK";
         }
+
+        // Errores reales de Firebase
+        if (jsonResponse.contains("INVALID_LOGIN_CREDENTIALS")) {
+            return "CREDENCIALES_INCORRECTAS";
+        }
+
+        if (jsonResponse.contains("USER_DISABLED")) {
+            return "USER_DISABLED";
+        }
+        if (jsonResponse.contains("INVALID_EMAIL")) {
+            return "INVALID_EMAIL";
+        }
+
+        // Error moderno de Firebase
+        if (jsonResponse.contains("INVALID_LOGIN_CREDENTIALS")) {
+            return "INVALID_PASSWORD";
+        }
+
+        return "UNKNOWN_ERROR";
     }
 
     // ---------------- HTTP POST JSON ----------------

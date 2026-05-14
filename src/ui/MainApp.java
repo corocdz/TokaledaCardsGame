@@ -7,10 +7,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javafx.animation.Animation;
-import javafx.animation.FadeTransition;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
-import javafx.animation.TranslateTransition;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
@@ -34,19 +32,18 @@ public class MainApp extends Application {
     public void start(Stage stage) throws Exception {
 
         primaryStage = stage;
+        primaryStage.setTitle("Tokaleda Cards Game");
+        primaryStage.getIcons().add(new Image(
+                getClass().getResourceAsStream("/ui/graphicResources/imagenes/logoApp.png")
+        ));
 
         // 2. Cargar el FXML con ResourceBundle
         FXMLLoader loader = new FXMLLoader(getClass().getResource("login.fxml"));
         loader.setResources(IdiomaManager.getBundle());
         Parent root = loader.load();
 
-        primaryStage.setTitle("Tokaleda Cards Game");
-        primaryStage.setScene(new Scene(root, 600, 400));
-
-        primaryStage.getIcons().add(new Image(
-                getClass().getResourceAsStream("/ui/graphicResources/imagenes/logoApp.png")
-        ));
-
+        primaryStage.setScene(new Scene(root, 1100, 900));
+        primaryStage.centerOnScreen();
         primaryStage.show();
 
         MusicManager.playMenuMusic();
@@ -66,6 +63,7 @@ public class MainApp extends Application {
             // Cambiar escena
             Scene scene = new Scene(root, width, height);
             primaryStage.setScene(scene);
+            primaryStage.centerOnScreen(); // ⭐ AÑADIR AQUÍ
             primaryStage.show();
 
             // Si es sala, guardamos el controlador
@@ -191,14 +189,6 @@ public class MainApp extends Application {
         }
     }
 
-    /*
-    private static void aplicarSlideTransition(Parent root, int width) {
-        TranslateTransition tt = new TranslateTransition(Duration.millis(350), root);
-        root.setTranslateX(width);
-        tt.setToX(0);
-        tt.play();
-    }
-     */
     public static void main(String[] args) {
         launch(args);
     }

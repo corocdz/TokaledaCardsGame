@@ -125,39 +125,56 @@ public class PartidaControllerPescaito extends PartidaControllerBase {
     @Override
     protected DatosPopUp construirDatosPopUpFinal() {
         try {
+            // 1. Leer pescaitos desde Firebase
             Map<String, Map<String, Object>> pescaitosBD
                     = bd.leerPescaitos(codigoSala, idToken);
+
+            // 2. Convertir BD → puntuaciones reales
             Map<String, Integer> puntuaciones
                     = ((JuegoPescaito) juego).calcularPuntuacionesDesdeBD(pescaitosBD);
 
+            // 3. Encontrar el máximo
             int maxPescaitos = puntuaciones.values().stream()
-                    .max(Integer::compare).orElse(0);
+                    .max(Integer::compare)
+                    .orElse(0);
 
+            // 4. Lista de ganadores (puede haber empate)
             List<String> ganadores = puntuaciones.entrySet().stream()
                     .filter(e -> e.getValue() == maxPescaitos)
                     .map(Map.Entry::getKey)
-                    .collect(java.util.stream.Collectors.toList());
+                    .toList();
 
             String resultado;
             String detalle;
+            String icono;
 
+            // 5. Construir textos igual que en Yusa
             if (ganadores.size() == 1) {
-                String nombreGanador = nombres.getOrDefault(ganadores.get(0), "Jugador");
-                resultado = "¡" + nombreGanador + " gana!";
+                String uidGanador = ganadores.get(0);
+                String nombre = nombres.getOrDefault(uidGanador, "Jugador");
+
+                resultado = "¡Ha ganado " + nombre + "!";
                 detalle = maxPescaitos + " pescaito" + (maxPescaitos != 1 ? "s" : "");
+
+                icono = "/ui/graphicResources/imagenes/imgGanador.png";
+
             } else {
-                String nombresEmpatados = ganadores.stream()
-                        .map(uid -> nombres.getOrDefault(uid, "Jugador"))
-                        .collect(java.util.stream.Collectors.joining(", "));
+                // Empate
                 resultado = "¡Empate!";
-                detalle = nombresEmpatados + " — " + maxPescaitos + " pescaitos cada uno";
+                detalle = maxPescaitos + " pescaitos cada uno";
+
+                icono = "/ui/graphicResources/imagenes/imgEmpate.png";
             }
 
-            return new DatosPopUp("🐟", resultado, detalle);
+            return new DatosPopUp(icono, resultado, detalle);
 
         } catch (Exception e) {
             e.printStackTrace();
-            return new DatosPopUp("🐟", "La partida ha terminado.", "");
+            return new DatosPopUp(
+                    "/ui/graphicResources/imagenes/imgEmpate.png",
+                    "La partida ha terminado.",
+                    ""
+            );
         }
     }
 

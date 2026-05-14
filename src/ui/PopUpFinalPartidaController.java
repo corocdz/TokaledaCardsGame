@@ -3,6 +3,7 @@ package ui;
 import com.google.gson.Gson;
 import firebase.BDPartidaService;
 import firebase.FirebaseDatabaseService;
+import i18n.IdiomaManager;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -14,11 +15,14 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 import partidaUTIL.Baraja;
 import partidaUTIL.Carta;
 import partidaUTIL.JuegoYusa;
+import ui.audio.ButtonSound;
 
 /**
  * Controller del popup de fin de partida.
@@ -38,23 +42,31 @@ import partidaUTIL.JuegoYusa;
 public class PopUpFinalPartidaController {
 
     @FXML
-    private Label lblIcono;
-    @FXML
     private Label lblTitulo;
     @FXML
     private Label lblResultado;
     @FXML
     private Label lblDetalle;
     @FXML
-    private Button btnJugarDeNuevo;
+    private Button btnVolverJugar;
     @FXML
-    private Button btnVolverSala;
+    private Button btnIrSala;
+    @FXML
+    private ImageView btnIrSalaImage;
+    @FXML
+    private ImageView btnVolverJugarImage;
+    @FXML
+    private ImageView imgIcono;
 
     private String codigoSala;
     private String modo;
 
     private final FirebaseDatabaseService db = new FirebaseDatabaseService();
     private final BDPartidaService bd = new BDPartidaService(db);
+
+    private PartidaControllerBase controladorOffline = null;
+
+    private int numIAsOffline = 1;
 
     private PartidaControllerBase controladorActual;
 
@@ -65,13 +77,25 @@ public class PopUpFinalPartidaController {
             String modo, String icono, String resultado, String detalle,
             Runnable callbackReiniciar /* ignorado, ya no se usa */, PartidaControllerBase controladorActual) {
 
+        btnVolverJugarImage.setImage(IdiomaManager.cargarImagen("btnVolverJugar"));
+        btnIrSalaImage.setImage(IdiomaManager.cargarImagen("btnIrSala"));
+
+        Animaciones.animarBoton(btnVolverJugar);
+        Animaciones.animarBoton(btnIrSala);
+
+        ButtonSound.activar(btnVolverJugar);
+        ButtonSound.activar(btnIrSala);
+
         this.codigoSala = codigoSala;
         this.modo = modo;
         this.controladorActual = controladorActual;
 
-        if (icono != null) {
-            lblIcono.setText(icono);
+        if (icono != null && !icono.isEmpty()) {
+            imgIcono.setImage(new Image(
+                    getClass().getResource(icono).toExternalForm()
+            ));
         }
+
         if (resultado != null) {
             lblResultado.setText(resultado);
         }
@@ -81,18 +105,14 @@ public class PopUpFinalPartidaController {
 
         boolean esHost = esHost();
 
-        // Solo el host puede pulsar los botones de acción
-        btnJugarDeNuevo.setDisable(!esHost);
-        btnVolverSala.setDisable(!esHost);
+        btnVolverJugar.setDisable(!esHost);
+        btnIrSala.setDisable(!esHost);
 
         if (!esHost) {
-            btnJugarDeNuevo.setText("Esperando al host...");
-            btnVolverSala.setText("Esperando al host...");
-            btnJugarDeNuevo.setStyle(btnJugarDeNuevo.getStyle()
-                    + "-fx-opacity:0.5;");
-            btnVolverSala.setStyle(btnVolverSala.getStyle()
-                    + "-fx-opacity:0.5;");
+            btnVolverJugar.setStyle("-fx-background-color: transparent; -fx-padding: 0; -fx-opacity: 0.55;");
+            btnIrSala.setStyle("-fx-background-color: transparent; -fx-padding: 0; -fx-opacity: 0.55;");
         }
+
     }
 
     private boolean esHost() {
@@ -113,6 +133,11 @@ public class PopUpFinalPartidaController {
     @FXML
     private void onJugarDeNuevo() {
 
+        if (controladorOffline != null) {
+            controladorOffline.reiniciarPartidaOffline();
+            return;
+        }
+
         if (controladorActual != null) {
             controladorActual.destruir();
         }
@@ -121,8 +146,8 @@ public class PopUpFinalPartidaController {
             return;
         }
 
-        btnJugarDeNuevo.setDisable(true);
-        btnVolverSala.setDisable(true);
+        btnVolverJugar.setDisable(true);
+        btnIrSala.setDisable(true);
 
         new Thread(() -> {
             try {
@@ -201,7 +226,7 @@ public class PopUpFinalPartidaController {
                         controller.init(SalaContext.codigoSalaActual,
                                 MainApp.usuarioActualUID, MainApp.usuarioActualToken);
 
-                        Stage stage = (Stage) btnJugarDeNuevo.getScene().getWindow();
+                        Stage stage = (Stage) btnVolverJugar.getScene().getWindow();
                         stage.setScene(new Scene(root));
 
                     } catch (Exception e) {
@@ -212,8 +237,8 @@ public class PopUpFinalPartidaController {
             } catch (Exception e) {
                 e.printStackTrace();
                 Platform.runLater(() -> {
-                    btnJugarDeNuevo.setDisable(false);
-                    btnVolverSala.setDisable(false);
+                    btnVolverJugar.setDisable(false);
+                    btnIrSala.setDisable(false);
                 });
             }
         }).start();
@@ -225,6 +250,11 @@ public class PopUpFinalPartidaController {
     @FXML
     private void onVolverSala() {
 
+        if (controladorOffline != null) {
+            controladorOffline.volverAlMenuOffline();
+            return;
+        }
+
         if (controladorActual != null) {
             controladorActual.destruir();
         }
@@ -233,8 +263,8 @@ public class PopUpFinalPartidaController {
             return;
         }
 
-        btnVolverSala.setDisable(true);
-        btnJugarDeNuevo.setDisable(true);
+        btnIrSala.setDisable(true);
+        btnVolverJugar.setDisable(true);
 
         new Thread(() -> {
             try {
@@ -277,13 +307,36 @@ public class PopUpFinalPartidaController {
     // =========================================================================
     private void ocultarOverlay() {
         // Buscar el overlayFinal en la escena y ocultarlo
-        if (btnJugarDeNuevo.getScene() != null) {
+        if (btnVolverJugar.getScene() != null) {
             javafx.scene.Node overlay
-                    = btnJugarDeNuevo.getScene().lookup("#overlayFinal");
+                    = btnVolverJugar.getScene().lookup("#overlayFinal");
             if (overlay instanceof StackPane sp) {
                 sp.setVisible(false);
                 sp.getChildren().clear();
             }
         }
     }
+
+    public void initOffline(String resultado, String detalle, String icono, PartidaControllerBase controladorOffline) {
+
+        this.controladorOffline = controladorOffline;
+
+        if (icono != null && !icono.isEmpty()) {
+            imgIcono.setImage(new Image(
+                    getClass().getResource(icono).toExternalForm()
+            ));
+        }
+
+        if (resultado != null) {
+            lblResultado.setText(resultado);
+        }
+        if (detalle != null) {
+            lblDetalle.setText(detalle);
+        }
+
+        // En offline, todos los botones están disponibles
+        btnVolverJugar.setDisable(false);
+        btnIrSala.setDisable(false);
+    }
+
 }

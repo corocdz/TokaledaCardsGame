@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.image.Image?>
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<StackPane fx:id="rootMenuOffline"
+           xmlns="http://javafx.com/javafx/8"
+           xmlns:fx="http://javafx.com/fxml/1"
+           fx:controller="ui.MenuOfflineController"
+           stylesheets="@graphicResources/menu.css">
+
+    <BorderPane fx:id="contenidoMenu">
+
+        <!-- LOGO + IDIOMA -->
+        <top>
+            <StackPane>
+                <VBox alignment="CENTER" spacing="10">
+                    <padding>
+                        <Insets top="50" right="0" bottom="40" left="0"/>
+                    </padding>
+
+                    <ImageView fx:id="logoImage" fitWidth="600" preserveRatio="true" />
+                </VBox>
+
+                <Button fx:id="btnIdioma" style="-fx-background-color: transparent;"
+                        StackPane.alignment="TOP_RIGHT"
+                        translateX="-20" translateY="20">
+                    <graphic>
+                        <ImageView fx:id="btnIdiomaImage" fitWidth="60" preserveRatio="true">
+                            <image>
+                                <Image url="@graphicResources/imagenes/btnIdioma.png"/>
+                            </image>
+                        </ImageView>
+                    </graphic>
+                </Button>
+            </StackPane>
+        </top>
+
+        <!-- CENTRO: TEXTO + COMBOBOX + BOTONES DE MODOS -->
+        <center>
+            <VBox alignment="CENTER" spacing="20">
+
+                <!-- GRUPO 1: Texto + ComboBox -->
+                <VBox alignment="CENTER" spacing="15">
+                    <Label fx:id="lblJugadoresIA"
+                           text="%menuOfflineController.textoComboBox"/>
+
+                    <ComboBox fx:id="comboJugadoresIA"
+                              prefWidth="200"
+                              style="-fx-font-size: 20px;" />
+                </VBox>
+
+                <!-- SEPARADOR ENTRE GRUPOS -->
+                <Region prefHeight="60"/>
+
+                <!-- GRUPO 2: Textos + Botones en HBox -->
+                <HBox alignment="CENTER" spacing="20">
+
+                    <!-- TEXTO IZQUIERDA -->
+                    <Label fx:id="lblTextoPescaito"
+                           text="%menuOfflineController.textoModoPescaito"
+                           wrapText="true"
+                           maxWidth="220"
+                           textAlignment="CENTER"
+                           alignment="CENTER"
+                           styleClass="textoModo" />
+
+                    <!-- BOTONES EN EL CENTRO -->
+                    <HBox alignment="CENTER" spacing="20">
+
+                        <Button fx:id="btnPescaito" style="-fx-background-color: transparent; -fx-padding: 0;">
+                            <graphic>
+                                <ImageView fx:id="btnPescaitoImage" fitWidth="350" preserveRatio="true"/>
+                            </graphic>
+                        </Button>
+
+                        <Button fx:id="btnYusa" style="-fx-background-color: transparent; -fx-padding: 0;">
+                            <graphic>
+                                <ImageView fx:id="btnYusaImage" fitWidth="350" preserveRatio="true"/>
+                            </graphic>
+                        </Button>
+
+                    </HBox>
+
+                    <!-- TEXTO DERECHA -->
+                    <Label fx:id="lblTextoYusa"
+                           text="%menuOfflineController.textoModoYusa"
+                           wrapText="true"
+                           maxWidth="220"
+                           textAlignment="CENTER"
+                           alignment="CENTER"
+                           styleClass="textoModo" />
+
+                </HBox>
+                <!-- BOTÓN VOLVER CENTRADO DEBAJO -->
+                <Button fx:id="btnVolver" style="-fx-background-color: transparent; -fx-padding: 0;">
+                    <graphic>
+                        <ImageView fx:id="btnVolverImage" fitWidth="380" preserveRatio="true"/>
+                    </graphic>
+                </Button>
+
+            </VBox>
+        </center>
+
+
+
+        <!-- OPCIONES + SALIR -->
+        <bottom>
+            <HBox alignment="BOTTOM_LEFT" spacing="20">
+                <padding>
+                    <Insets left="20" bottom="20"/>
+                </padding>
+
+                <Button fx:id="btnOpciones" style="-fx-background-color: transparent; -fx-padding: 0;">
+                    <graphic>
+                        <ImageView fitWidth="100" preserveRatio="true">
+                            <image>
+                                <Image url="@graphicResources/imagenes/botonOpciones.png"/>
+                            </image>
+                        </ImageView>
+                    </graphic>
+                </Button>
+
+                <Button fx:id="btnSalir" style="-fx-background-color: transparent; -fx-padding: 0;">
+                    <graphic>
+                        <ImageView fitWidth="100" preserveRatio="true">
+                            <image>
+                                <Image url="@graphicResources/imagenes/botonSalir.png"/>
+                            </image>
+                        </ImageView>
+                    </graphic>
+                </Button>
+            </HBox>
+            
+            
+            
+        </bottom>
+
+    </BorderPane>
+
+</StackPane>

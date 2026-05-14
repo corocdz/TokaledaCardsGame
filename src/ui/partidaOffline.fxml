@@ -91,19 +91,27 @@
         <Pane fx:id="zonaAbajo" prefHeight="260" prefWidth="1280" />
 
         <Label fx:id="lblArriba" layoutX="910" layoutY="210" text="">
-            <font><Font name="System Bold" size="24.0" /></font>
+            <font>
+                <Font name="System Bold" size="24.0" />
+            </font>
         </Label>
 
         <Label fx:id="lblIzquierda" layoutX="180" layoutY="510" text="">
-            <font><Font name="System Bold" size="24.0" /></font>
+            <font>
+                <Font name="System Bold" size="24.0" />
+            </font>
         </Label>
 
         <Label fx:id="lblDerecha" layoutX="1620" layoutY="510" text="">
-            <font><Font name="System Bold" size="24.0" /></font>
+            <font>
+                <Font name="System Bold" size="24.0" />
+            </font>
         </Label>
 
         <Label fx:id="lblAbajo" layoutX="910.0" layoutY="820.0">
-            <font><Font name="System Bold" size="24.0" /></font>
+            <font>
+                <Font name="System Bold" size="24.0" />
+            </font>
         </Label>
 
     </AnchorPane>
@@ -119,3 +127,4 @@
     </StackPane>
 
 </StackPane>
+

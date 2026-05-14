@@ -9,6 +9,7 @@ import i18n.IdiomaManager;
 import java.util.ResourceBundle;
 import java.util.HashMap;
 import java.util.Map;
+import javafx.application.Platform;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
@@ -43,7 +44,7 @@ public class RegistroController {
     @FXML
     private ImageView btnIdiomaImage;
     @FXML
-    private Button btnIdioma;    
+    private Button btnIdioma;
     @FXML
     private Label tituloRegistro;
     @FXML
@@ -59,28 +60,49 @@ public class RegistroController {
     @FXML
     private void initialize() {
 
+        Platform.runLater(() -> Animaciones.fadeInPro(rootRegistro));
+
         // Cargar imagen
         logoImage.setImage(new Image(
                 getClass().getResource("/ui/graphicResources/imagenes/tokaledaCardsGame.png").toExternalForm()
-        ));        
-        
+        ));
+
+        // Limitador nombre (10)
+        txtNombre.setTextFormatter(new TextFormatter<>(c
+                -> c.getControlNewText().length() <= 10 ? c : null
+        ));
+
+        // Limitador email (50)
+        txtEmail.setTextFormatter(new TextFormatter<>(c
+                -> c.getControlNewText().length() <= 50 ? c : null
+        ));
+
+        // Limitador password (32)
+        txtPassword.setTextFormatter(new TextFormatter<>(c
+                -> c.getControlNewText().length() <= 32 ? c : null
+        ));
+
+        txtConfirmar.setTextFormatter(new TextFormatter<>(c
+                -> c.getControlNewText().length() <= 32 ? c : null
+        ));
+
         btnIdiomaImage.setImage(IdiomaManager.cargarImagen("btnIdioma"));
         btnRegistroImage.setImage(IdiomaManager.cargarImagen("btnRegistro"));
         btnVolverImage.setImage(IdiomaManager.cargarImagen("btnVolver"));
-                      
+
         Animaciones.animarLogo(logoImage);
         Animaciones.animarBoton(btnVolver);
         Animaciones.animarBoton(btnRegistro);
         Animaciones.animarLabelGeneral(tituloRegistro);
         Animaciones.animarLabelSecundario(textoVolver);
-                
+
         // Hover sonoro (después o antes, da igual si usas addEventHandler)
         ButtonSound.activar(btnIdioma);
         ButtonSound.activar(btnRegistro);
         ButtonSound.activar(btnVolver);
-        ButtonSound.activar(botonOpciones);      
-        
-        btnIdioma.setOnAction(e -> cambiarIdioma());  
+        ButtonSound.activar(botonOpciones);
+
+        btnIdioma.setOnAction(e -> cambiarIdioma());
         btnRegistro.setOnAction(e -> registrar());
         btnVolver.setOnAction(e -> MainApp.cambiarEscena("login.fxml", 600, 400));
         botonOpciones.setOnAction(e -> Animaciones.mostrarPopupSonido(rootRegistro));
@@ -92,44 +114,90 @@ public class RegistroController {
         String password = txtPassword.getText().trim();
         String confirmar = txtConfirmar.getText().trim();
 
+        // Campos vacíos
         if (nombre.isEmpty() || email.isEmpty() || password.isEmpty() || confirmar.isEmpty()) {
             Animaciones.mostrarError(rootRegistro, bundle.getString("registroController.error.campos"));
             return;
         }
 
+        // Email válido
+        if (!emailValido(email)) {
+            Animaciones.mostrarError(rootRegistro, bundle.getString("registro.errorFormatoEmail"));
+            return;
+        }
+
+        // Contraseña fuerte
+        if (!passwordValida(password)) {
+            Animaciones.mostrarError(rootRegistro, bundle.getString("registro.errorFormatoPassword"));
+            return;
+        }
+
+        // Coincidencia de contraseñas
         if (!password.equals(confirmar)) {
             Animaciones.mostrarError(rootRegistro, bundle.getString("registroController.error.password"));
             return;
         }
 
         try {
-            boolean ok = authService.register(email, password);
-            if (ok) {
-                String uid = authService.getLocalId();
-                String token = authService.getIdToken();
+            String result = authService.register(email, password);
 
-                Map<String, Object> datos = new HashMap<>();
-                datos.put("email", email);
-                datos.put("nombre", nombre);
-                datos.put("avatar", "default.png");
-                datos.put("conectado", true);
-                datos.put("ultimaConexion", System.currentTimeMillis());
+            switch (result) {
+                case "OK":
+                    String uid = authService.getLocalId();
+                    String token = authService.getIdToken();
 
-                dbService.guardarUsuario(uid, datos, token);
+                    Map<String, Object> datos = new HashMap<>();
+                    datos.put("email", email);
+                    datos.put("nombre", nombre);
+                    datos.put("avatar", "default.png");
+                    datos.put("conectado", true);
+                    datos.put("ultimaConexion", System.currentTimeMillis());
+                    datos.put("idioma", IdiomaManager.getCodigoIdioma());
 
-                System.out.println("Registro correcto. UID: " + uid);
-                System.out.println("UID creado en registro: " + uid);
+                    dbService.guardarUsuario(uid, datos, token);
 
-                MainApp.usuarioActualUID = uid;
-                MainApp.usuarioActualToken = token;
+                    MainApp.usuarioActualUID = uid;
+                    MainApp.usuarioActualToken = token;
 
-                MainApp.cambiarEscena("menuPrincipal.fxml", 800, 600);
-            } else {
-                Animaciones.mostrarError(rootRegistro, bundle.getString("registroController.error.registro"));
+                    MainApp.cambiarEscena("menuPrincipal.fxml", 800, 600);
+                    return;
+
+                case "EMAIL_EXISTS":
+                    Animaciones.mostrarError(rootRegistro, bundle.getString("registro.errorEmailRegistrado"));
+                    return;
+
+                case "INVALID_EMAIL":
+                    Animaciones.mostrarError(rootRegistro, bundle.getString("registro.errorFormatoEmail"));
+                    return;
+
+                case "WEAK_PASSWORD":
+                    Animaciones.mostrarError(rootRegistro, bundle.getString("registro.errorFormatoPassword"));
+                    return;
+
+                case "MISSING_PASSWORD":
+                    Animaciones.mostrarError(rootRegistro, bundle.getString("registro.errorSinPassword"));
+                    return;
+
+                case "NETWORK_ERROR":
+                    Animaciones.mostrarError(rootRegistro, bundle.getString("registro.errorConexion"));
+                    return;
+
+                default:
+                    Animaciones.mostrarError(rootRegistro, bundle.getString("registro.errorDesconocido"));
+                    return;
             }
+
         } catch (Exception ex) {
             Animaciones.mostrarError(rootRegistro, bundle.getString("registroController.error.excepcion") + ex.getMessage());
         }
+    }
+
+    private boolean emailValido(String email) {
+        return email.matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$");
+    }
+
+    private boolean passwordValida(String password) {
+        return password.matches("^(?=.*[A-Z])(?=(?:.*\\d){2,})(?=.*[^A-Za-z0-9]).{6,}$");
     }
 
     private void mostrarError(String mensaje) {
@@ -139,7 +207,7 @@ public class RegistroController {
         alert.setContentText(mensaje);
         alert.showAndWait();
     }
-    
+
     private void cambiarIdioma() {
 
         String langActual = IdiomaManager.getCodigoIdioma();
@@ -161,6 +229,6 @@ public class RegistroController {
 
         // Recargar escena
         MainApp.cambiarEscena("registro.fxml", 800, 600);
-    }        
-    
+    }
+
 }

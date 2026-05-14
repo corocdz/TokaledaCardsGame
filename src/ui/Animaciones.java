@@ -14,8 +14,10 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.effect.DropShadow;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.StackPane;
+import javafx.scene.paint.Color;
 import javafx.util.Duration;
 
 public class Animaciones {
@@ -174,6 +176,54 @@ public class Animaciones {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    public static void fadeIn(Node root) {
+        root.setOpacity(0);
+
+        FadeTransition ft = new FadeTransition(Duration.millis(450), root);
+        ft.setFromValue(0);
+        ft.setToValue(1);
+        ft.play();
+    }
+
+    public static void fadeInPro(Node root) {
+
+        // Estado inicial
+        root.setOpacity(0);
+        root.setScaleX(0.97);
+        root.setScaleY(0.97);
+
+        // Fade suave
+        FadeTransition fade = new FadeTransition(Duration.millis(420), root);
+        fade.setFromValue(0);
+        fade.setToValue(1);
+
+        // Micro-zoom elegante
+        ScaleTransition zoom = new ScaleTransition(Duration.millis(420), root);
+        zoom.setFromX(0.97);
+        zoom.setFromY(0.97);
+        zoom.setToX(1.0);
+        zoom.setToY(1.0);
+
+        // Glow retro suave (desaparece)
+        DropShadow glow = new DropShadow();
+        glow.setColor(Color.rgb(255, 105, 180, 0.7)); // rosa gamer
+        glow.setRadius(25);
+        glow.setSpread(0.2);
+        root.setEffect(glow);
+
+        Timeline glowFade = new Timeline(
+                new KeyFrame(Duration.ZERO, new KeyValue(glow.radiusProperty(), 25)),
+                new KeyFrame(Duration.millis(420), new KeyValue(glow.radiusProperty(), 0))
+        );
+
+        // Curva de animación más profesional
+        fade.setInterpolator(Interpolator.EASE_OUT);
+        zoom.setInterpolator(Interpolator.EASE_OUT);
+
+        // Ejecutar todo junto
+        new ParallelTransition(fade, zoom, glowFade).play();
     }
 
 }

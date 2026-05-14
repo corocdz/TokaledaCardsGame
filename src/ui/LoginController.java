@@ -7,6 +7,7 @@ import java.util.Map;
 import javafx.fxml.FXML;
 import i18n.IdiomaManager;
 import java.util.ResourceBundle;
+import javafx.application.Platform;
 import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
@@ -64,6 +65,8 @@ public class LoginController {
     @FXML
     private void initialize() {
 
+        Platform.runLater(() -> Animaciones.fadeInPro(rootLogin));
+
         // Cargar imagen del logo
         logoImage.setImage(new Image(
                 getClass().getResource("/ui/graphicResources/imagenes/tokaledaCardsGame.png").toExternalForm()
@@ -85,7 +88,7 @@ public class LoginController {
         ButtonSound.activar(btnIdioma);
         ButtonSound.activar(btnRegistro);
         ButtonSound.activar(btnLogin);
-        ButtonSound.activar(botonOpciones);      
+        ButtonSound.activar(botonOpciones);
 
         btnLogin.setOnAction(e -> login());
         btnRegistro.setOnAction(e -> MainApp.cambiarEscena("registro.fxml", 600, 400));
@@ -95,26 +98,50 @@ public class LoginController {
         btnLoginJ1.setOnAction(e -> loginRapido("jugador1@test.com", "123456"));
         btnLoginJ2.setOnAction(e -> loginRapido("jugador2@test.com", "123456"));
         btnLoginJ3.setOnAction(e -> loginRapido("jugador3@test.com", "123456"));
-        btnLoginJ4.setOnAction(e -> loginRapido("jugador4@test.com", "123456"));
+        btnLoginJ4.setOnAction(e -> loginRapido("jugador4@test.com", "Coro11."));
     }
 
     private void login() {
         String email = txtEmail.getText().trim();
         String password = txtPassword.getText().trim();
 
+        // Validación local
         if (email.isEmpty() || password.isEmpty()) {
             Animaciones.mostrarError(rootLogin, bundle.getString("loginController.error.campos"));
             return;
         }
 
         try {
-            boolean ok = authService.login(email, password);
+            String result = authService.login(email, password);
 
-            if (!ok) {
-                Animaciones.mostrarError(rootLogin, bundle.getString("loginController.error.credenciales"));
-                return;
+            switch (result) {
+                case "OK":
+                    break;
+
+                case "CREDENCIALES_INCORRECTAS":
+                    Animaciones.mostrarError(rootLogin, bundle.getString("loginController.error.credenciales"));
+                    return;
+
+                case "USER_DISABLED":
+                    Animaciones.mostrarError(rootLogin, bundle.getString("loginController.error.cuentaDesactivada"));
+                    return;
+
+                case "INVALID_EMAIL":
+                    Animaciones.mostrarError(rootLogin, bundle.getString("loginController.error.emailNoValido"));
+                    return;
+
+                case "NETWORK_ERROR":
+                    Animaciones.mostrarError(rootLogin, bundle.getString("loginController.error.desconexion"));
+                    return;
+
+                default:
+                    Animaciones.mostrarError(rootLogin, bundle.getString("loginController.error.desconocido"));
+                    return;
             }
 
+            // -------------------------
+            // LOGIN CORRECTO
+            // -------------------------
             String uid = authService.getLocalId();
             String token = authService.getIdToken();
             MainApp.usuarioActualUID = uid;
@@ -128,11 +155,13 @@ public class LoginController {
             if (nodoJson != null && !nodoJson.equals("null")) {
                 Map<String, Object> datosExistentes = new com.google.gson.Gson().fromJson(nodoJson, Map.class);
                 if (datosExistentes != null) {
+
                     // Cargar idioma del usuario
                     Object idioma = datosExistentes.get("idioma");
                     if (idioma != null) {
                         IdiomaManager.setIdioma(idioma.toString());
                     }
+
                     Object conectado = datosExistentes.get("conectado");
                     if (conectado != null && Boolean.TRUE.equals(conectado)) {
                         yaConectado = true;
@@ -175,12 +204,31 @@ public class LoginController {
 
     private void loginRapido(String email, String password) {
         try {
-            // 1. Iniciar sesión con Firebase
-            boolean ok = authService.login(email, password);
+            String result = authService.login(email, password);
 
-            if (!ok) {
-                Animaciones.mostrarError(rootLogin, bundle.getString("loginController.error.pruebas"));
-                return;
+            switch (result) {
+                case "OK":
+                    break;
+
+                case "CREDENCIALES_INCORRECTAS":
+                    Animaciones.mostrarError(rootLogin, bundle.getString("loginController.error.credenciales"));
+                    return;
+                    
+                case "USER_DISABLED":
+                    Animaciones.mostrarError(rootLogin, bundle.getString("loginController.error.cuentaDesactivada"));
+                    return;
+
+                case "INVALID_EMAIL":
+                    Animaciones.mostrarError(rootLogin, bundle.getString("loginController.error.emailNoValido"));
+                    return;
+
+                case "NETWORK_ERROR":
+                    Animaciones.mostrarError(rootLogin, bundle.getString("loginController.error.desconexion"));
+                    return;
+
+                default:
+                    Animaciones.mostrarError(rootLogin, bundle.getString("loginController.error.desconocido"));
+                    return;
             }
 
             // 2. Obtener UID y token igual que en login normal
@@ -261,6 +309,6 @@ public class LoginController {
 
         // Recargar escena
         MainApp.cambiarEscena("login.fxml", 800, 600);
-    }   
+    }
 
 }

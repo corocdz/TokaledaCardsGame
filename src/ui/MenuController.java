@@ -48,6 +48,8 @@ public class MenuController {
     @FXML
     private void initialize() {
 
+        Platform.runLater(() -> Animaciones.fadeInPro(rootMenuPrincipal));        
+        
         // Cargar imagen
         logoImage.setImage(new Image(
                 getClass().getResource("/ui/graphicResources/imagenes/tokaledaCardsGame.png").toExternalForm()
@@ -86,7 +88,7 @@ public class MenuController {
     }
 
     private void abrirModoUnJugador() {
-        MainApp.cambiarEscena("mesa.fxml", 1000, 700);
+        MainApp.cambiarEscena("menuOffline.fxml", 1000, 700);
     }
     
     private void cambiarIdioma() {

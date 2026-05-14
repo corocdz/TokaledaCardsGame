@@ -59,6 +59,8 @@ public abstract class PartidaControllerBase {
 
     // ─── Nodos FXML (comunes a todos los modos) ───────────────────────────────
     @FXML
+    protected StackPane rootSala;
+    @FXML
     protected Pane zonaArriba;
     @FXML
     protected Pane zonaIzquierda;
@@ -145,6 +147,9 @@ public abstract class PartidaControllerBase {
     //  PUNTO DE ENTRADA — igual para todos los modos
     // =========================================================================
     public void init(String codigoSala, String uidLocal, String idToken) {
+
+        Platform.runLater(() -> Animaciones.fadeInPro(rootSala));
+
         this.codigoSala = codigoSala;
         this.uidLocal = uidLocal;
         this.idToken = idToken;
@@ -462,7 +467,8 @@ public abstract class PartidaControllerBase {
         }))
         );
 
-        /**          *
+        /**
+         * *
          *
          * hilosListeners.add( bd.escucharVolverSala(codigoSala, idToken, ts ->
          * Platform.runLater(() -> { if (controladorDestruido) { return; } new
@@ -795,7 +801,7 @@ public abstract class PartidaControllerBase {
     // =========================================================================
     //  EVENTOS DE MANO Y MAZO
     // =========================================================================
-    private void configurarEventosManoJugador() {
+    protected void configurarEventosManoJugador() {
         zonaAbajo.setOnMouseEntered(e -> {
             manoAbierta = true;
             redibujarManoLocal();
@@ -814,7 +820,7 @@ public abstract class PartidaControllerBase {
         });
     }
 
-    private void configurarEventosRobar() {
+    protected void configurarEventosRobar() {
         imgMazo.setOnMouseEntered(e -> {
             DropShadow glow = new DropShadow();
             glow.setColor(Color.LIMEGREEN);
@@ -1162,4 +1168,13 @@ public abstract class PartidaControllerBase {
     private void prepararNavegacion() {
         controladorDestruido = true;
     }
+
+    public void reiniciarPartidaOffline() {
+        // por defecto no hace nada
+    }
+
+    public void volverAlMenuOffline() {
+        // por defecto no hace nada
+    }
+
 }

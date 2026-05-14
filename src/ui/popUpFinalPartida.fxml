@@ -6,6 +6,8 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.image.Image?>
 
 <!--
     PopUp de fin de partida.
@@ -26,12 +28,13 @@
                  -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.8), 30, 0.4, 0, 0);"
           maxWidth="560" maxHeight="420">
 
-        <!-- Icono / emoji grande -->
-        <Label fx:id="lblIcono" text="🎉"
-               style="-fx-font-size: 56px;"/>
+        <ImageView fx:id="imgIcono"
+                   fitWidth="120"
+                   preserveRatio="true"/>
+
 
         <!-- Título principal -->
-        <Label fx:id="lblTitulo" text="¡La partida ha terminado!"
+        <Label fx:id="lblTitulo" text=""
                wrapText="true"
                style="-fx-font-size: 28px;
                       -fx-font-weight: bold;
@@ -55,25 +58,52 @@
 
         <!-- Botones -->
         <HBox alignment="CENTER" spacing="20">
-            <padding><Insets top="16"/></padding>
-
-            <Button fx:id="btnJugarDeNuevo" text="🔄 Jugar de nuevo"
+            <padding>
+                <Insets top="16"/>
+            </padding>            
+            
+            <Button fx:id="btnVolverJugar"
                     onAction="#onJugarDeNuevo"
-                    style="-fx-font-size: 15px;
-                           -fx-padding: 10 24;
-                           -fx-background-color: #2e7d32;
-                           -fx-text-fill: white;
-                           -fx-background-radius: 8;
-                           -fx-cursor: hand;"/>
-
-            <Button fx:id="btnVolverSala" text="🚪 Volver a la sala"
+                    pickOnBounds="false"
+                    style="
+            -fx-background-color: transparent;
+            -fx-padding: 0;
+            -fx-background-insets: 0;
+            -fx-background-radius: 0;
+            -fx-focus-color: transparent;
+            -fx-faint-focus-color: transparent;
+        ">
+                <graphic>
+                    <ImageView fx:id="btnVolverJugarImage" fitWidth="380" preserveRatio="true">
+                        <image>
+                            <Image url="@graphicResources/imagenes/btnVolverJugar.png"/>
+                        </image>
+                    </ImageView>
+                </graphic>
+            </Button>
+            
+            <Button fx:id="btnIrSala"
                     onAction="#onVolverSala"
-                    style="-fx-font-size: 15px;
-                           -fx-padding: 10 24;
-                           -fx-background-color: #1565c0;
-                           -fx-text-fill: white;
-                           -fx-background-radius: 8;
-                           -fx-cursor: hand;"/>
+                    pickOnBounds="false"
+                    style="
+            -fx-background-color: transparent;
+            -fx-padding: 0;
+            -fx-background-insets: 0;
+            -fx-background-radius: 0;
+            -fx-focus-color: transparent;
+            -fx-faint-focus-color: transparent;
+        ">
+
+                <graphic>
+                    <ImageView fx:id="btnIrSalaImage" fitWidth="380" preserveRatio="true">
+                        <image>
+                            <Image url="@graphicResources/imagenes/btnIrSala.png"/>
+                        </image>
+                    </ImageView>
+                </graphic>
+            </Button>
+            
+            
         </HBox>
 
     </VBox>

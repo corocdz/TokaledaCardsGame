@@ -63,4 +63,21 @@ public class IdiomaManager {
         return new Image(url.toExternalForm());
     }
 
+    public static String get(String clave, Object... params) {
+        try {
+            ResourceBundle bundle = getBundle();
+            String texto = bundle.getString(clave);
+
+            if (params != null && params.length > 0) {
+                return java.text.MessageFormat.format(texto, params);
+            }
+
+            return texto;
+
+        } catch (Exception e) {
+            System.err.println("❌ Clave no encontrada en properties: " + clave);
+            return "???" + clave + "???";
+        }
+    }
+
 }

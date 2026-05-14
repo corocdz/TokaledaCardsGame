@@ -1,9 +1,13 @@
 package ui;
 
+import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 import javafx.animation.PauseTransition;
 import javafx.application.Platform;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
@@ -31,7 +35,7 @@ public class PartidaOfflinePescaitoController extends PartidaControllerBase {
     // ─── Constantes ───────────────────────────────────────────────────────────
     private static final String UID_JUGADOR = "jugador";
     private static final String PREFIJO_IA = "ia_";
-    private static final double DELAY_IA_SEG = 4.0;
+    private static final double DELAY_IA_SEG = 2.0; // 5 
 
     // ─── Estado offline ────────────────────────────────────────────────────────
     private final Map<String, Integer> pescaitosPorJugador = new HashMap<>();
@@ -48,7 +52,7 @@ public class PartidaOfflinePescaitoController extends PartidaControllerBase {
      */
     // Campo — añade junto a los otros campos
     private Button btnIAManual = null;
-    private static final boolean MODO_DEBUG_IA = true; // ← cambia a false para volver al modo automático
+    private static final boolean MODO_DEBUG_IA = false; // ← cambia a false para volver al modo automático
     // ── CAMPO: guardar qué preguntó la IA antes de robar ─────────────────────
     private final Map<String, Integer> numeroPreguntadoPorIA = new HashMap<>();
 
@@ -68,7 +72,7 @@ public class PartidaOfflinePescaitoController extends PartidaControllerBase {
         this.idToken = "";
 
         // ── Nombres ──────────────────────────────────────────────────────────
-        nombres.put(UID_JUGADOR, "Tú");
+        nombres.put(UID_JUGADOR, "Tu");
         for (int i = 1; i <= numIAs; i++) {
             nombres.put(PREFIJO_IA + i, "IA " + i);
         }
@@ -118,7 +122,7 @@ public class PartidaOfflinePescaitoController extends PartidaControllerBase {
             }
             actualizarInterfaz();
             narrarGlobal("¡Partida offline de Pescaito! " + numIAs + " IA(s). ¡Comienza tu turno!");
-            activarInteraccion();
+            iniciarTurnoJugador(UID_JUGADOR);
         });
     }
 
@@ -249,28 +253,6 @@ public class PartidaOfflinePescaitoController extends PartidaControllerBase {
         narrarPrivado(UID_JUGADOR, "Seleccionaste el " + numero + ". Ahora elige un jugador.");
     }
 
-    @Override
-    protected DatosPopUp construirDatosPopUpFinal() {
-        int max = pescaitosPorJugador.values().stream().max(Integer::compare).orElse(0);
-        List<String> ganadores = pescaitosPorJugador.entrySet().stream()
-                .filter(e -> e.getValue() == max)
-                .map(Map.Entry::getKey)
-                .collect(Collectors.toList());
-
-        String resultado, detalle;
-        if (ganadores.size() == 1) {
-            resultado = "¡Ha ganado " + nombres.getOrDefault(ganadores.get(0), "Jugador") + "!";
-            detalle = max + " pescaito" + (max != 1 ? "s" : "");
-        } else {
-            resultado = "¡Empate!";
-            detalle = ganadores.stream()
-                    .map(u -> nombres.getOrDefault(u, u))
-                    .collect(Collectors.joining(", "))
-                    + " — " + max + " pescaitos cada uno";
-        }
-        return new DatosPopUp("🐟", resultado, detalle);
-    }
-
     // =========================================================================
     //  TURNO HUMANO
     // =========================================================================
@@ -279,15 +261,22 @@ public class PartidaOfflinePescaitoController extends PartidaControllerBase {
             return;
         }
         uiBloqueada = true;
-        narrarPrivado(UID_JUGADOR, "Preguntas a " + nombres.get(uidJugadorObjetivo)
-                + " por el " + numeroSeleccionado + ".");
+
+        int numPreguntado = numeroSeleccionado;  // guardar antes de limpiar
+        String objPreguntado = uidJugadorObjetivo;
+
+        narrarPrivado(UID_JUGADOR, "Preguntas a " + nombres.get(objPreguntado)
+                + " por el " + numPreguntado + ".");
 
         Map<String, Object> res = pescaito().preguntar(
-                UID_JUGADOR, uidJugadorObjetivo, numeroSeleccionado, manos, baraja, descarte);
+                UID_JUGADOR, objPreguntado, numPreguntado, manos, baraja, descarte);
 
-        procesarResultado(UID_JUGADOR, uidJugadorObjetivo, res);
+        // Limpiar SIEMPRE tras preguntar, independientemente del resultado
+        numeroSeleccionado = null;
         uidJugadorObjetivo = null;
         uiBloqueada = false;
+
+        procesarResultado(UID_JUGADOR, objPreguntado, res, numPreguntado);
         if (UID_JUGADOR.equals(uidTurnoActual) && !esperandoRobo) {
             activarInteraccion();
         }
@@ -304,7 +293,7 @@ public class PartidaOfflinePescaitoController extends PartidaControllerBase {
         List<String> mano = manos.get(UID_JUGADOR);
         String cartaRobada = mano.get(mano.size() - 1);
         int numRobado = juego.obtenerNumeroCarta(cartaRobada);
-        narrarPrivado(UID_JUGADOR, "Robaste un " + numRobado + ".");
+        
 
         boolean haPescado = pescaito().haPescadoAlRobar(cartaRobada, numeroPreguntadoAntesDeRobar);
         boolean pescaito = pescaito().esPescaitoPorRobo(UID_JUGADOR, manos, descarte);
@@ -326,11 +315,16 @@ public class PartidaOfflinePescaitoController extends PartidaControllerBase {
         }
 
         if (haPescado) {
-            narrarPrivado(UID_JUGADOR, "¡Pescaste! Mantienes el turno.");
-            activarInteraccion();
+            narrarGlobal("Tú pescaste al robar el " + numRobado
+                    + " — ¡Es el número que buscabas! Mantienes el turno.");
+            PauseTransition delay = new PauseTransition(Duration.seconds(2));
+            delay.setOnFinished(ev -> iniciarTurnoJugador(UID_JUGADOR));
+            delay.play();
         } else {
-            narrarPrivado(UID_JUGADOR, "Pasas el turno.");
-            pasarTurno(UID_JUGADOR);
+            narrarGlobal("Tú robas el " + numRobado + " — No es el que buscabas. Pasas el turno.");
+            PauseTransition delay = new PauseTransition(Duration.seconds(2));
+            delay.setOnFinished(ev -> pasarTurno(UID_JUGADOR));
+            delay.play();
         }
     }
 
@@ -338,7 +332,8 @@ public class PartidaOfflinePescaitoController extends PartidaControllerBase {
     //  PROCESADO DE RESULTADO (compartido humano e IA)
     // =========================================================================
     private void procesarResultado(String preguntador, String objetivo,
-            Map<String, Object> res) {
+            Map<String, Object> res, int numeroPreguntado) {
+
         boolean acierto = (boolean) res.get("acierto");
         boolean pescaitoFlag = (boolean) res.get("pescaito");
         boolean debeRobar = (boolean) res.get("debeRobar");
@@ -349,15 +344,39 @@ public class PartidaOfflinePescaitoController extends PartidaControllerBase {
         String nomObj = nombres.getOrDefault(objetivo, objetivo);
 
         if (acierto) {
-            narrarGlobal(nomPreg + " acertó. Roba " + cartasRec + " carta(s) a " + nomObj + ".");
+            narrarGlobal(nomPreg + " preguntó a " + nomObj + " por el "
+                    + numeroPreguntado + " → ¡Lo tenía! Roba "
+                    + cartasRec + " carta(s).");
             if (pescaitoFlag) {
                 int num = (int) res.get("numeroPescaito");
                 pescaitosPorJugador.merge(preguntador, 1, Integer::sum);
-                narrarGlobal("¡PESCAITO de " + nomPreg + "! (Nº" + num + ") Total: "
-                        + pescaitosPorJugador.get(preguntador));
+                narrarGlobal("¡PESCAITO de " + nomPreg + "! (Nº" + num
+                        + ") — Total: " + pescaitosPorJugador.get(preguntador));
             }
+
+            actualizarInterfaz();
+            logEstadoPartida("Pregunta: " + nomPreg + " → " + nomObj + " | Acierto: true");
+            if (verificarFin()) {
+                return;
+            }
+
+            // Delay de 2 segundos para que el mensaje sea legible antes de continuar
+            final String preguntadorFinal = preguntador;
+            PauseTransition delay = new PauseTransition(Duration.seconds(2));
+            delay.setOnFinished(ev -> {
+                if (mantieneTurno) {
+                    narrarGlobal("Turno de: " + nomPreg + " (mantiene turno).");
+                    iniciarTurnoJugador(preguntadorFinal);
+                } else {
+                    pasarTurno(preguntadorFinal);
+                }
+            });
+            delay.play();
+            return; // salir aquí — el delay gestiona el resto
+
         } else {
-            narrarGlobal(nomPreg + " falló. " + nomObj + " no tenía ese número.");
+            narrarGlobal(nomPreg + " preguntó a " + nomObj + " por el "
+                    + numeroPreguntado + " → No lo tenía. Debe robar.");
         }
 
         actualizarInterfaz();
@@ -383,22 +402,24 @@ public class PartidaOfflinePescaitoController extends PartidaControllerBase {
                     pasarTurno(preguntador);
                     return;
                 }
-                numeroPreguntadoAntesDeRobar = numeroSeleccionado;
-                esperandoRobo = true;
-                desactivarInteraccion();
-                imgMazo.setDisable(false);
-                imgMazo.setOpacity(1.0);
+                // Delay de 2 segundos antes de activar el robo
+                final int numParaRobar = numeroPreguntado; // ← capturar ANTES del delay
+                PauseTransition delay = new PauseTransition(Duration.seconds(1));
+                delay.setOnFinished(ev -> {
+                    numeroPreguntadoAntesDeRobar = numParaRobar; // ← asignar aquí
+                    esperandoRobo = true;
+                    desactivarInteraccion();
+                    imgMazo.setDisable(false);
+                    imgMazo.setOpacity(1.0);
+                });
+                delay.play();
             }
             return;
         }
 
         if (mantieneTurno) {
             narrarGlobal("Turno de: " + nomPreg + " (mantiene turno).");
-            if (esIA(preguntador)) {
-                programarTurnoIA();
-            } else {
-                activarInteraccion();
-            }
+            iniciarTurnoJugador(preguntador);  // ← todos pasan por aquí
         } else {
             pasarTurno(preguntador);
         }
@@ -477,23 +498,16 @@ public class PartidaOfflinePescaitoController extends PartidaControllerBase {
             return;
         }
 
+        /**
+         * List<String> manoIA = manos.get(uidIA); // NOTA: si llega aquí,
+         * siempre tiene carta porque iniciarTurnoJugador ya robó if (manoIA ==
+         * null || manoIA.isEmpty()) { pasarTurno(uidIA); return; }
+         */
         List<String> manoIA = manos.get(uidIA);
-
+        // Si no tiene carta aquí es un estado inválido — no debería ocurrir
         if (manoIA == null || manoIA.isEmpty()) {
-            if (!baraja.isEmpty()) {
-                pescaito().robarCarta(uidIA, manos, baraja);
-                String cartaRobada = manos.get(uidIA).get(manos.get(uidIA).size() - 1);
-                int numRobado = juego.obtenerNumeroCarta(cartaRobada);
-                narrarGlobal(nombres.get(uidIA) + " no tenía cartas. Roba un " + numRobado + ".");
-                logEstadoPartida("Robo automático (sin cartas): " + nombres.get(uidIA)
-                        + " robó el " + numRobado);
-                actualizarInterfaz();
-                if (verificarFin()) {
-                    return;
-                }
-            }
-            pasarTurno(uidIA);
-            return;
+            System.out.println("WARN: ejecutarTurnoIA llamado sin carta para " + uidIA);
+            return; // no hacer nada, iniciarTurnoJugador lo resolverá
         }
 
         // Elegir número aleatorio de su mano
@@ -503,11 +517,8 @@ public class PartidaOfflinePescaitoController extends PartidaControllerBase {
         }
         List<Integer> listaNum = new ArrayList<>(nums);
         int numPreguntado = listaNum.get(new Random().nextInt(listaNum.size()));
-
-        // Guardar qué preguntó para usarlo en haPescadoAlRobar
         numeroPreguntadoPorIA.put(uidIA, numPreguntado);
 
-        // Elegir rival aleatorio con cartas
         List<String> rivalesConCartas = ordenJugadoresGlobal.stream()
                 .filter(u -> !u.equals(uidIA))
                 .filter(u -> {
@@ -517,6 +528,8 @@ public class PartidaOfflinePescaitoController extends PartidaControllerBase {
                 .collect(Collectors.toList());
 
         if (rivalesConCartas.isEmpty()) {
+            // No hay rivales con cartas pero hay baraja → igual pasa turno
+            // (no puede preguntar a nadie)
             narrarGlobal(nombres.get(uidIA) + " no tiene a quien preguntar. Pasa turno.");
             logEstadoPartida("IA sin rivales: " + nombres.get(uidIA) + " pasa turno");
             pasarTurno(uidIA);
@@ -524,19 +537,13 @@ public class PartidaOfflinePescaitoController extends PartidaControllerBase {
         }
 
         String objetivo = rivalesConCartas.get(new Random().nextInt(rivalesConCartas.size()));
-        narrarGlobal(nombres.get(uidIA) + " pregunta a " + nombres.get(objetivo)
-                + " por el " + numPreguntado + ".");
+        narrarGlobal(nombres.get(uidIA) + " pregunta a " + nombres.get(objetivo) + " por el " + numPreguntado + ".");
 
-        Map<String, Object> res = pescaito().preguntar(uidIA, objetivo, numPreguntado,
-                manos, baraja, descarte);
-
+        Map<String, Object> res = pescaito().preguntar(uidIA, objetivo, numPreguntado, manos, baraja, descarte);
         boolean tenia = (boolean) res.get("acierto");
-        logEstadoPartida("IA pregunta: " + nombres.get(uidIA)
-                + " → " + nombres.get(objetivo)
-                + " por el " + numPreguntado
-                + " | " + (tenia ? "¡LO TENÍA!" : "No lo tenía"));
-
-        procesarResultado(uidIA, objetivo, res);
+        logEstadoPartida("IA pregunta: " + nombres.get(uidIA) + " → " + nombres.get(objetivo)
+                + " por el " + numPreguntado + " | " + (tenia ? "¡LO TENÍA!" : "No lo tenía"));
+        procesarResultado(uidIA, objetivo, res, numPreguntado);
     }
 
     private void ejecutarRoboIA(String uidIA) {
@@ -578,7 +585,7 @@ public class PartidaOfflinePescaitoController extends PartidaControllerBase {
 
         if (haPescado) {
             narrarGlobal(nombres.get(uidIA) + " pescó. Mantiene turno.");
-            programarTurnoIA();
+            iniciarTurnoJugador(uidIA);  // ← en lugar de programarTurnoIA()
         } else {
             pasarTurno(uidIA);
         }
@@ -588,7 +595,9 @@ public class PartidaOfflinePescaitoController extends PartidaControllerBase {
     //  GESTIÓN DE TURNOS
     // =========================================================================
     private void pasarTurno(String actual) {
-        String siguiente = siguienteConCartas(actual);
+        // Siguiente en orden circular
+        int idx = ordenJugadoresGlobal.indexOf(actual);
+        String siguiente = ordenJugadoresGlobal.get((idx + 1) % ordenJugadoresGlobal.size());
         uidTurnoActual = siguiente;
         narrarGlobal("Turno de: " + nombres.getOrDefault(siguiente, siguiente));
         actualizarInterfaz();
@@ -596,8 +605,100 @@ public class PartidaOfflinePescaitoController extends PartidaControllerBase {
             return;
         }
 
-        if (esIA(siguiente)) {
-            programarTurnoIA();
+        iniciarTurnoJugador(siguiente);
+    }
+
+    /**
+     * Punto de entrada al turno de cualquier jugador. Comprueba si tiene cartas
+     * o debe robar antes de jugar.
+     */
+    private void iniciarTurnoJugador(String uid) {
+        List<String> mano = manos.get(uid);
+        boolean tieneCarta = mano != null && !mano.isEmpty();
+
+        if (!tieneCarta) {
+            if (!baraja.isEmpty()) {
+                // Sin carta pero hay baraja → robar automáticamente
+                pescaito().robarCarta(uid, manos, baraja);
+                String cartaRobada = manos.get(uid).get(manos.get(uid).size() - 1);
+                int numRobado = juego.obtenerNumeroCarta(cartaRobada);
+
+                // Comprobar pescaito por robo automático
+                boolean pescaito = pescaito().esPescaitoPorRobo(uid, manos, descarte);
+                if (pescaito) {
+                    pescaitosPorJugador.merge(uid, 1, Integer::sum);
+                    narrarGlobal("¡PESCAITO de " + nombres.getOrDefault(uid, uid)
+                            + "! Total: " + pescaitosPorJugador.get(uid));
+                }
+
+                narrarGlobal(nombres.getOrDefault(uid, uid)
+                        + " no tenía cartas. Roba un " + numRobado + " automáticamente.");
+                actualizarInterfaz();
+                logEstadoPartida("Robo automático: " + nombres.getOrDefault(uid, uid) + " → " + numRobado);
+
+                if (verificarFin()) {
+                    return;
+                }
+
+                // Si después del robo sigue sin carta (hizo pescaito), volver a comprobar
+                List<String> manoTrasRobo = manos.get(uid);
+                if (manoTrasRobo == null || manoTrasRobo.isEmpty()) {
+                    // Hizo pescaito con el robo automático → volver a iniciarTurnoJugador
+                    iniciarTurnoJugador(uid);
+                    return;
+                }
+            } else {
+                // Sin carta y sin baraja → pasa turno
+                narrarGlobal(nombres.getOrDefault(uid, uid)
+                        + " no tiene cartas ni hay baraja. Pasa turno.");
+                pasarTurno(uid);
+                return;
+            }
+        }
+
+        // Caso 4: solo este jugador tiene cartas pero nadie tiene cartas que preguntarle
+        // (todos los rivales tienen mano vacía y no hay baraja para que rellenen)
+        boolean hayRivalesConCartas = ordenJugadoresGlobal.stream()
+                .filter(u -> !u.equals(uid))
+                .anyMatch(u -> {
+                    List<String> m = manos.get(u);
+                    return m != null && !m.isEmpty();
+                });
+
+        if (!hayRivalesConCartas && baraja.isEmpty()) {
+            narrarGlobal(nombres.getOrDefault(uid, uid)
+                    + " es el único con cartas y no hay baraja. Pasa turno.");
+            pasarTurno(uid);
+            return;
+        }
+
+        // Tiene carta y puede jugar → activar su turno
+        uidTurnoActual = uid; // asegurar que el turno es de este jugador
+        if (esIA(uid)) {
+            final String uidCapturado = uid;
+            desactivarInteraccion();
+            if (MODO_DEBUG_IA) {
+                // Reusar mostrarBotonIAManual pero apuntando a uid concreto
+                if (btnIAManual != null) {
+                    rootSala.getChildren().remove(btnIAManual);
+                }
+                btnIAManual = new Button("▶  " + nombres.getOrDefault(uid, uid) + " pregunta");
+                btnIAManual.setStyle("-fx-font-size:16px;-fx-padding:12 28;"
+                        + "-fx-background-color:#1565c0;-fx-text-fill:white;"
+                        + "-fx-background-radius:8;-fx-cursor:hand;");
+                StackPane.setAlignment(btnIAManual, javafx.geometry.Pos.BOTTOM_RIGHT);
+                btnIAManual.setTranslateX(-40);
+                btnIAManual.setTranslateY(-40);
+                btnIAManual.setOnAction(e -> {
+                    ocultarBotonIAManual();
+                    ejecutarTurnoIA(uidCapturado); // uid capturado, no uidTurnoActual
+                });
+                rootSala.getChildren().add(btnIAManual);
+            } else {
+                PauseTransition p = new PauseTransition(Duration.seconds(DELAY_IA_SEG));
+                p.setOnFinished(ev -> ejecutarTurnoIA(uidCapturado));
+                p.play();
+            }
         } else {
             activarInteraccion();
         }
@@ -660,24 +761,22 @@ public class PartidaOfflinePescaitoController extends PartidaControllerBase {
     //  POPUP FINAL — offline sin Firebase
     // =========================================================================
     public void reiniciarPartida() {
-        // Limpiar todo y volver a empezar con las mismas IAs
-        manos.clear();
-        baraja.clear();
-        descarte.clear();
-        pescaitosPorJugador.clear();
-        nombres.clear();
-        ordenJugadoresGlobal.clear();
-        partidaFinalizada = false;
-        esperandoRobo = false;
-        uiBloqueada = false;
-        numeroSeleccionado = null;
-        numeroPreguntadoAntesDeRobar = null;
-        uidJugadorObjetivo = null;
-        overlayFinal.getChildren().clear();
-        overlayFinal.setVisible(false);
-        numeroPreguntadoPorIA.clear(); // añadir junto a las otras limpiezas
+        try {
+            FXMLLoader loader = new FXMLLoader(
+                    getClass().getResource("/ui/partidaOffline.fxml"));
 
-        iniciarOffline(numIAs);
+            PartidaOfflinePescaitoController nuevoCtrl = new PartidaOfflinePescaitoController();
+            loader.setController(nuevoCtrl);
+
+            Parent root = loader.load();
+            nuevoCtrl.iniciarOffline(numIAs);
+
+            Stage stage = (Stage) overlayFinal.getScene().getWindow();
+            stage.setScene(new Scene(root));
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     public void volverAlMenu() {
@@ -756,6 +855,99 @@ public class PartidaOfflinePescaitoController extends PartidaControllerBase {
                 baraja.size(), descarte.size()));
         sb.append("╚══════════════════════════════════════════════════════╝");
         System.out.println(sb.toString());
+    }
+
+    @Override
+    protected DatosPopUp construirDatosPopUpFinal() {
+        try {
+            // 1. Puntuaciones ya están en memoria
+            Map<String, Integer> puntuaciones = new HashMap<>(pescaitosPorJugador);
+
+            // 2. Encontrar el máximo
+            int maxPescaitos = puntuaciones.values().stream()
+                    .max(Integer::compare)
+                    .orElse(0);
+
+            // 3. Lista de ganadores (puede haber empate)
+            List<String> ganadores = puntuaciones.entrySet().stream()
+                    .filter(e -> e.getValue() == maxPescaitos)
+                    .map(Map.Entry::getKey)
+                    .toList();
+
+            String resultado;
+            String detalle;
+            String icono;
+
+            // 4. Construir textos igual que en Yusa
+            if (ganadores.size() == 1) {
+                String uidGanador = ganadores.get(0);
+                String nombre = nombres.getOrDefault(uidGanador, "Jugador");
+
+                resultado = "¡Ha ganado " + nombre + "!";
+                detalle = maxPescaitos + " pescaito" + (maxPescaitos != 1 ? "s" : "");
+
+                icono = "/ui/graphicResources/imagenes/imgGanador.png";
+
+            } else {
+                // Empate
+                resultado = "¡Empate!";
+                detalle = "más de 1 jugador ha sacado " + maxPescaitos + " pecaitos.";
+
+                icono = "/ui/graphicResources/imagenes/imgEmpate.png";
+            }
+
+            return new DatosPopUp(icono, resultado, detalle);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new DatosPopUp(
+                    "/ui/graphicResources/imagenes/imgEmpate.png",
+                    "La partida ha terminado.",
+                    ""
+            );
+        }
+    }
+
+    @Override
+    protected void mostrarPantallaFinal() {
+        DatosPopUp datos = construirDatosPopUpFinal();
+
+        try {
+            FXMLLoader loader = new FXMLLoader(
+                    getClass().getResource("/ui/popUpFinalPartida.fxml"));
+            StackPane popUpPane = loader.load();
+
+            PopUpFinalPartidaController popUpCtrl = loader.getController();
+
+            popUpCtrl.initOffline(
+                    datos.resultado,
+                    datos.detalle,
+                    datos.icono,
+                    this // <-- controlador offline actual
+            );
+
+            overlayFinal.getChildren().clear();
+            overlayFinal.getChildren().add(popUpPane);
+            overlayFinal.setVisible(true);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            Label fallback = new Label("La partida ha terminado.");
+            fallback.setStyle("-fx-text-fill:white;-fx-font-size:24px;");
+            overlayFinal.getChildren().clear();
+            overlayFinal.getChildren().add(fallback);
+            overlayFinal.setVisible(true);
+        }
+    }
+
+    @Override
+    public void reiniciarPartidaOffline() {
+        reiniciarPartida();
+    }
+
+    @Override
+    public void volverAlMenuOffline() {
+        volverAlMenu();
     }
 
 }

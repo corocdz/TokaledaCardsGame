@@ -1,5 +1,51 @@
+@font-face {
+    font-family: "Minecraft";
+    src: url("fonts/Minecraft.ttf");
+}
+
+/* Toda la UI usa Minecraft */
+* {
+    -fx-font-family: "Minecraft";
+}
+
+/* Fondo de la mesa */
 .root {
     -fx-background-image: url("/ui/graphicResources/imagenes/fondoMesa.jpg");
     -fx-background-size: cover;
     -fx-background-position: center center;
+}
+
+/* Botones estilo Tokaleda */
+/* Estilo Tokaleda para TODOS los botones */
+.button {
+    -fx-font-size: 24px;
+    -fx-text-fill: white;
+    -fx-background-color: rgba(255,105,180,0.55);
+    -fx-background-radius: 12px;
+    -fx-padding: 14 28;
+    -fx-border-color: rgba(255,255,255,0.7);
+    -fx-border-width: 2px;
+    -fx-border-radius: 12px;
+    -fx-cursor: hand;
+}
+
+/* Hover bonito */
+.button:hover {
+    -fx-background-color: rgba(255,105,180,0.75);
+    -fx-border-color: white;
+}
+
+/* Click (efecto pulsado) */
+.button:pressed {
+    -fx-background-color: rgba(255,105,180,0.35);
+    -fx-translate-y: 2;
+}
+
+/* Narrador */
+#narradorLabel {
+    -fx-background-color: rgba(255,105,180,0.35);
+    -fx-background-radius: 12;
+    -fx-padding: 14;
+    -fx-text-fill: white;
+    -fx-font-size: 32px;
 }
