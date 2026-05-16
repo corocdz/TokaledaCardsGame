@@ -1,13 +1,5 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package ui;
 
-/**
- *
- * @author coro
- */
 import i18n.IdiomaManager;
 import javafx.animation.*;
 import javafx.fxml.FXMLLoader;
@@ -20,8 +12,39 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.util.Duration;
 
+/**
+ * Clase encargada de gestionar animaciones visuales en la interfaz.
+ *
+ * <p>
+ * Proporciona efectos simples y reutilizables para botones, etiquetas, logos y
+ * transiciones de entrada. Su objetivo es mejorar la experiencia visual del
+ * usuario mediante animaciones suaves y no intrusivas.
+ * </p>
+ *
+ * <p>
+ * Todas las animaciones están implementadas con las clases de transición de
+ * JavaFX, como {@link FadeTransition}, {@link ScaleTransition},
+ * {@link RotateTransition}, {@link TranslateTransition} y
+ * {@link ParallelTransition}.
+ * </p>
+ *
+ * <p>
+ * La clase es completamente estática, lo que permite invocar sus métodos desde
+ * cualquier controlador sin necesidad de instanciarla.
+ * </p>
+ */
 public class Animaciones {
 
+    /**
+     * Aplica al logo un efecto continuo de balanceo y respiración.
+     *
+     * <p>
+     * Animación en loop que da la sensación de que el logo "respira" con
+     * movimientos de inclinación, movimiento y zoom.
+     * </p>
+     *
+     * @param logo Imagen del logo a animar.
+     */
     public static void animarLogo(ImageView logo) {
 
         RotateTransition rot = new RotateTransition(Duration.seconds(2), logo);
@@ -41,6 +64,16 @@ public class Animaciones {
         new ParallelTransition(rot, scale).play();
     }
 
+    /**
+     * Añade animaciones de hover a un botón.
+     *
+     * <p>
+     * Al pasar el ratón por encima, el botón aumenta ligeramente de tamaño y
+     * reduce su opacidad. Al salir, vuelve a su estado original.
+     * </p>
+     *
+     * @param boton Botón al que aplicar el efecto.
+     */
     public static void animarBoton(Button boton) {
 
         boton.addEventHandler(javafx.scene.input.MouseEvent.MOUSE_ENTERED, e -> {
@@ -66,6 +99,16 @@ public class Animaciones {
         });
     }
 
+    /**
+     * Simula una pulsación rápida sobre un nodo.
+     *
+     * <p>
+     * Reduce brevemente el tamaño del elemento y lo devuelve a su escala
+     * original, imitando el efecto de "click" físico.
+     * </p>
+     *
+     * @param nodo Elemento visual que recibirá la animación.
+     */
     public static void animarPress(Node nodo) {
         ScaleTransition stDown = new ScaleTransition(Duration.millis(80), nodo);
         stDown.setToX(0.95);
@@ -79,9 +122,18 @@ public class Animaciones {
         seq.play();
     }
 
+    /**
+     * Aplica a una etiqueta un efecto de latido y flotación.
+     *
+     * <p>
+     * La etiqueta aumenta y disminuye ligeramente su tamaño mientras sube y
+     * baja unos píxeles en un movimiento suave y constante.
+     * </p>
+     *
+     * @param label Etiqueta a animar.
+     */
     public static void animarLabelGeneral(Label label) {
 
-        // Pulse (latido)
         ScaleTransition pulse = new ScaleTransition(Duration.seconds(2), label);
         pulse.setFromX(1.0);
         pulse.setFromY(1.0);
@@ -90,7 +142,6 @@ public class Animaciones {
         pulse.setAutoReverse(true);
         pulse.setCycleCount(Animation.INDEFINITE);
 
-        // Float (flotar)
         TranslateTransition floatAnim = new TranslateTransition(Duration.seconds(3), label);
         floatAnim.setFromY(0);
         floatAnim.setToY(-6);
@@ -100,9 +151,19 @@ public class Animaciones {
         new ParallelTransition(pulse, floatAnim).play();
     }
 
+    /**
+     * Aplica una animación más dinámica a etiquetas secundarias.
+     *
+     * <p>
+     * Combina un movimiento orbital, un pequeño pulso y una rotación suave.
+     * Animación pensada para textos que deben llamar más la atención sin ser
+     * excesivos.
+     * </p>
+     *
+     * @param label Etiqueta a animar.
+     */
     public static void animarLabelSecundario(Label label) {
 
-        // Posición base (la que tú le des en FXML o con setTranslateX antes)
         double baseX = label.getTranslateX();
         double baseY = label.getTranslateY();
 
@@ -148,6 +209,18 @@ public class Animaciones {
         new ParallelTransition(orbita, pulse, rot).play();
     }
 
+    /**
+     * Muestra un popUp de error dentro del contenedor indicado.
+     *
+     * <p>
+     * Carga el FXML correspondiente, aplica la traducción y añade el popUp
+     * sobre el StackPane principal. Animación posible por controller del popUp
+     * error {link PopUpErrorController}
+     * </p>
+     *
+     * @param root Contenedor donde se insertará el popup.
+     * @param mensaje Texto del error a mostrar.
+     */
     public static void mostrarError(StackPane root, String mensaje) {
         try {
             FXMLLoader loader = new FXMLLoader(Animaciones.class.getResource("/ui/popUpError.fxml"));
@@ -165,6 +238,16 @@ public class Animaciones {
         }
     }
 
+    /**
+     * Muestra el popUp de opciones de sonido.
+     *
+     * <p>
+     * Carga el FXML del popUp y lo añade al contenedor principal sin bloquear
+     * la interfaz.
+     * </p>
+     *
+     * @param root Contenedor donde se insertará el popup.
+     */
     public static void mostrarPopupSonido(StackPane root) {
         try {
             FXMLLoader loader = new FXMLLoader(Animaciones.class.getResource("/ui/popUpSonido.fxml"));
@@ -178,35 +261,32 @@ public class Animaciones {
         }
     }
 
+    /**
+     * Transición de entrada avanzada con fade, zoom y brillo suave.
+     *
+     * <p>
+     * Combina opacidad, escalado y un efecto de resplandor que desaparece. Se
+     * utiliza para pantallas principales o elementos destacados.
+     * </p>
+     *
+     * @param root Nodo al que aplicar la animación.
+     */
     public static void fadeIn(Node root) {
-        root.setOpacity(0);
 
-        FadeTransition ft = new FadeTransition(Duration.millis(450), root);
-        ft.setFromValue(0);
-        ft.setToValue(1);
-        ft.play();
-    }
-
-    public static void fadeInPro(Node root) {
-
-        // Estado inicial
         root.setOpacity(0);
         root.setScaleX(0.97);
         root.setScaleY(0.97);
 
-        // Fade suave
         FadeTransition fade = new FadeTransition(Duration.millis(420), root);
         fade.setFromValue(0);
         fade.setToValue(1);
 
-        // Micro-zoom elegante
         ScaleTransition zoom = new ScaleTransition(Duration.millis(420), root);
         zoom.setFromX(0.97);
         zoom.setFromY(0.97);
         zoom.setToX(1.0);
         zoom.setToY(1.0);
 
-        // Glow retro suave (desaparece)
         DropShadow glow = new DropShadow();
         glow.setColor(Color.rgb(255, 105, 180, 0.7)); // rosa gamer
         glow.setRadius(25);
@@ -218,11 +298,9 @@ public class Animaciones {
                 new KeyFrame(Duration.millis(420), new KeyValue(glow.radiusProperty(), 0))
         );
 
-        // Curva de animación más profesional
         fade.setInterpolator(Interpolator.EASE_OUT);
         zoom.setInterpolator(Interpolator.EASE_OUT);
 
-        // Ejecutar todo junto
         new ParallelTransition(fade, zoom, glowFade).play();
     }
 

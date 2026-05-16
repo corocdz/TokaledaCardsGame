@@ -148,7 +148,7 @@ public abstract class PartidaControllerBase {
     // =========================================================================
     public void init(String codigoSala, String uidLocal, String idToken) {
 
-        Platform.runLater(() -> Animaciones.fadeInPro(rootSala));
+        Platform.runLater(() -> Animaciones.fadeIn(rootSala));
 
         this.codigoSala = codigoSala;
         this.uidLocal = uidLocal;
@@ -160,6 +160,7 @@ public abstract class PartidaControllerBase {
         // 2. Eventos de mano y mazo (idénticos en todos los modos)
         configurarEventosManoJugador();
         cargarOrdenJugadoresGlobal();
+        precargarNombres();
         configurarEventosRobar();
 
         // 3. Listeners comunes (narrador, estado finalizada, turno)
@@ -532,6 +533,14 @@ public abstract class PartidaControllerBase {
 
         try {
             bd.actualizarEstadoPartida(codigoSala, "finalizada", idToken);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        // Limpiar el narrador para no dejar mensajes obsoletos en Firebase
+        // Borrar el narrador al finalizar para no dejar residuos en Firebase
+        try {
+            db.borrarNodo("salas/" + codigoSala + "/partida/narrador", idToken);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -1151,6 +1160,33 @@ public abstract class PartidaControllerBase {
         if (hilo != null) {
             hilosListeners.add(hilo);
         }
+    }
+
+    // En PartidaControllerBase, añade este método:
+    private void precargarNombres() {
+        new Thread(() -> {
+            try {
+                String json = db.leerNodo("salas/" + codigoSala + "/jugadores", idToken);
+                if (json == null || "null".equals(json)) {
+                    return;
+                }
+                Map<String, Object> jugadores = new Gson().fromJson(json, Map.class);
+                for (String uid : jugadores.keySet()) {
+                    // Poner UID como fallback inmediatamente
+                    nombres.putIfAbsent(uid, uid);
+                    try {
+                        String nombreJson = db.leerNodo("usuarios/" + uid + "/nombre", idToken);
+                        if (nombreJson != null) {
+                            nombres.put(uid, nombreJson.replace("\"", ""));
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }).start();
     }
 
     // Método público — para que el popup pueda llamarlo

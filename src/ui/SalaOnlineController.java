@@ -67,7 +67,7 @@ public class SalaOnlineController {
     @FXML
     public void initialize() {
 
-        Platform.runLater(() -> Animaciones.fadeInPro(rootSala));
+        Platform.runLater(() -> Animaciones.fadeIn(rootSala));
         
         btnIniciarImage.setImage(IdiomaManager.cargarImagen("btnIniciar"));
         btnSalirImage.setImage(IdiomaManager.cargarImagen("btnSalir"));
@@ -89,7 +89,7 @@ public class SalaOnlineController {
         // 3. Configurar modos de juego
         comboModoJuego.getItems().addAll(
                 "Pescaito",
-                "Puteao",
+                "Frustrao",
                 "Yusa",
                 "Culo",
                 "Chopinki"
@@ -527,15 +527,15 @@ public class SalaOnlineController {
                             LinkedHashMap.class
                     );
 
-            // Ordenar por joinedAt
+            // Ordenar por unidoEn
             List<Map.Entry<String, Object>> lista = new ArrayList<>(jugadores.entrySet());
 
             lista.sort((a, b) -> {
                 Map<String, Object> dataA = (Map<String, Object>) a.getValue();
                 Map<String, Object> dataB = (Map<String, Object>) b.getValue();
 
-                double ta = (double) dataA.get("joinedAt");
-                double tb = (double) dataB.get("joinedAt");
+                double ta = (double) dataA.get("unidoEn");
+                double tb = (double) dataB.get("unidoEn");
 
                 return Double.compare(ta, tb);
             });

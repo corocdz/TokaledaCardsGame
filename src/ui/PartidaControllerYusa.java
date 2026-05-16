@@ -52,6 +52,9 @@ public class PartidaControllerYusa extends PartidaControllerBase {
     private PauseTransition pausaRevelado = null;
     // Añade junto a los otros campos de estado:
     private PauseTransition tickDoce = null;
+    private long tiempoFinUltimaRevelacion = 0L;
+    private static final long VENTANA_PROTECCION_MS = 3000; // 3 segundos
+    private String uidPoseedorYusaActual = null;
     /**
      * Lista de UIDs que participan en la ronda de desempate actual. null o
      * vacía = ronda normal (participan todos los vivos).
@@ -149,6 +152,9 @@ public class PartidaControllerYusa extends PartidaControllerBase {
         }
 
         actualizarInterfaz();
+        System.out.println("[NOMBRES] mapa: " + nombres);
+        System.out.println("[NOMBRES] uidLocal: " + uidLocal);
+        System.out.println("[NOMBRES] uidTurnoActual: " + uidTurnoActual);
     }
 
     // Sobreescribe actualizarInterfaz() para proteger la revelación:
@@ -177,9 +183,21 @@ public class PartidaControllerYusa extends PartidaControllerBase {
             if (ts == ultimoEstadoTs) {
                 return;
             }
+
+            // AÑADIR: si no hay ronda en curso y la acción es REVELAR_CARTAS, ignorar
+            // Evita re-procesar el estadoRonda de la ronda anterior
+            String accion = estado.get("accion") != null ? estado.get("accion").toString() : "";
+            if ("REVELAR_CARTAS".equals(accion)) {
+                long ahora = System.currentTimeMillis();
+                if (ahora - tiempoFinUltimaRevelacion < VENTANA_PROTECCION_MS) {
+                    System.out.println("[YUSA] REVELAR_CARTAS ignorado — muy cerca de la última revelación ("
+                            + (ahora - tiempoFinUltimaRevelacion) + "ms)");
+                    ultimoEstadoTs = ts;
+                    return;
+                }
+            }
             ultimoEstadoTs = ts;
 
-            String accion = s(estado, "accion");
             String fase = s(estado, "fase");
             String turnoUid = s(estado, "turnoUid");
             if ("null".equals(turnoUid)) {
@@ -273,7 +291,7 @@ public class PartidaControllerYusa extends PartidaControllerBase {
                     mostrarBotonJugarDoce();
                 } else {
                     narrarPrivado(uidLocal,
-                            nombres.getOrDefault(turnoUid, "Jugador") + " tiene un 12. Esperando...");
+                            nombres.getOrDefault(turnoUid, turnoUid) + " tiene un 12. Esperando...");
                 }
             }
 
@@ -283,8 +301,9 @@ public class PartidaControllerYusa extends PartidaControllerBase {
                     narrarPrivado(uidLocal,
                             "Es tu turno de yusa. Pulsa la zona de un rival.");
                 } else if (turnoUid != null && !turnoUid.equals(uidLocal)) {
+                    uidPoseedorYusaActual = turnoUid;
                     narrarPrivado(uidLocal,
-                            nombres.getOrDefault(turnoUid, "Jugador")
+                            nombres.getOrDefault(turnoUid, turnoUid)
                             + " está eligiendo a quién preguntar su yusa...");
                 }
             }
@@ -393,7 +412,7 @@ public class PartidaControllerYusa extends PartidaControllerBase {
 
         if (supervivientes.size() == 1) {
             String uidGanador = supervivientes.get(0);
-            String nombre = nombres.getOrDefault(uidGanador, "Jugador");
+            String nombre = nombres.getOrDefault(uidGanador, uidGanador);
             int vidasGanador = vidas.getOrDefault(uidGanador, 1);
             // Siempre el mismo mensaje para todos los clientes
             resultado = "¡Ha ganado " + nombre + "!";
@@ -409,7 +428,7 @@ public class PartidaControllerYusa extends PartidaControllerBase {
             String uidMasVidas = supervivientes.stream()
                     .max(java.util.Comparator.comparingInt(vidas::get))
                     .orElse(supervivientes.get(0));
-            String nombre = nombres.getOrDefault(uidMasVidas, "Jugador");
+            String nombre = nombres.getOrDefault(uidMasVidas, uidMasVidas);
             int vidasMax = vidas.getOrDefault(uidMasVidas, 1);
             resultado = "¡Ha ganado " + nombre + "!";
             detalle = "Con " + vidasMax + " vida"
@@ -433,6 +452,7 @@ public class PartidaControllerYusa extends PartidaControllerBase {
     // =========================================================================
     private void iniciarRondaYusa() throws IOException {
         rondaEnCurso = true;
+        ultimoEstadoTs = -1L;
         faseRondaActual = null;
         ordenRondaActual.clear();
         objetivosPorPoseedor.clear();
@@ -457,6 +477,9 @@ public class PartidaControllerYusa extends PartidaControllerBase {
 
         faseRondaActual = yusa().determinarFaseRonda(manos);
         narrarGlobal("— Ronda nueva — " + textoFase(faseRondaActual));
+
+        narrarGlobal(nombres.getOrDefault(uidTurnoActual, uidTurnoActual)
+                + " comienza la ronda — " + textoFase(faseRondaActual));
 
         switch (faseRondaActual) {
             case NORMAL ->
@@ -580,6 +603,10 @@ public class PartidaControllerYusa extends PartidaControllerBase {
             String sig = ordenRondaActual.get(1);
             yusa().intercambiarCartas(uid, sig, manos);
             bd.publicarManosYusa(codigoSala, manos, idToken);
+            narrarGlobal(nombres.getOrDefault(uid, uid) + " intercambia carta con "
+                    + nombres.getOrDefault(sig, sig) + ".");
+        } else if ("QUEDAR".equals(decision)) {
+            narrarGlobal(nombres.getOrDefault(uid, uid) + " se queda su carta.");
         }
         ordenRondaActual.remove(0);
         publicarSiguienteDecision();
@@ -597,7 +624,7 @@ public class PartidaControllerYusa extends PartidaControllerBase {
 
     private void ejecutarRoboUltimo(String uid) throws IOException {
         if (baraja.isEmpty()) {
-            narrarGlobal(nombres.getOrDefault(uid, "Jugador") + " quiso cambiar pero la baraja está vacía.");
+            narrarGlobal(nombres.getOrDefault(uid, uid) + " quiso cambiar pero la baraja está vacía.");
             publicarRevelarCartas();
             return;
         }
@@ -611,7 +638,7 @@ public class PartidaControllerYusa extends PartidaControllerBase {
         bd.publicarManosYusa(codigoSala, manos, idToken);
         bd.actualizarBaraja(codigoSala, baraja, idToken);
         bd.actualizarDescarte(codigoSala, descarte, idToken);
-        narrarGlobal(nombres.getOrDefault(uid, "Jugador") + " cambió su carta por la baraja.");
+        narrarGlobal(nombres.getOrDefault(uid, uid) + " cambió su carta por la baraja.");
 
         JuegoYusa.FaseRonda nueva = yusa().determinarFaseRonda(manos);
         if (nueva != JuegoYusa.FaseRonda.NORMAL) {
@@ -648,6 +675,7 @@ public class PartidaControllerYusa extends PartidaControllerBase {
             return;
         }
         bd.publicarEstadoRonda(codigoSala, "JUGAR_DOCE", JuegoYusa.FaseRonda.DOCE.name(), uidDoce, idToken);
+        narrarGlobal(nombres.getOrDefault(uidDoce, uidDoce) + " tiene un 12. ¡Que lo lance!");
         if (uidDoce.equals(uidLocal)) {
             mostrarBotonJugarDoce();
         }
@@ -691,7 +719,7 @@ public class PartidaControllerYusa extends PartidaControllerBase {
 
         // Narrar cuántas yusas hay
         if (colaYusas.size() == 1) {
-            narrarGlobal(nombres.getOrDefault(colaYusas.get(0), "Jugador")
+            narrarGlobal(nombres.getOrDefault(colaYusas.get(0), colaYusas.get(0))
                     + " tiene una yusa.");
         } else {
             String nombresYusas = colaYusas.stream()
@@ -733,8 +761,8 @@ public class PartidaControllerYusa extends PartidaControllerBase {
             snapshotCartas.put(uidLocal, m.get(0));
         }
 
-        narrarGlobal(nombres.getOrDefault(uidLocal, "Jugador")
-                + " pregunta a " + nombres.getOrDefault(uidObjetivo, "Jugador")
+        narrarGlobal(nombres.getOrDefault(uidLocal, uidLocal)
+                + " pregunta a " + nombres.getOrDefault(uidObjetivo, uidObjetivo)
                 + " el palo de su yusa.");
 
         try {
@@ -754,6 +782,11 @@ public class PartidaControllerYusa extends PartidaControllerBase {
         soyObjetivoDeYusa = false;
         enviarDecision("PALO_" + palo.name());
         narrarPrivado(uidLocal, "Elegiste " + palo.name() + ". Esperando...");
+        // Usar el campo guardado en lugar de buscar en objetivosPorPoseedor
+        String nomPoseedor = nombres.getOrDefault(uidPoseedorYusaActual, uidPoseedorYusaActual);
+        narrarGlobal(nombres.getOrDefault(uidLocal, uidLocal)
+                + " ha respondido " + palo.name()
+                + " a la yusa de " + nomPoseedor + ".");
     }
 
     private void procesarPaloRecibido(String uidObjetivo, String decision) {
@@ -893,9 +926,13 @@ public class PartidaControllerYusa extends PartidaControllerBase {
                 ex.printStackTrace();
             }
 
-            boolean manasValidas = !frescas.isEmpty()
-                    && yusa().getJugadoresVivos().stream()
-                            .allMatch(uid -> frescas.containsKey(uid));
+            // SUSTITUYE la condición manasValidas:
+            long vivosConCarta = yusa().getJugadoresVivos().stream()
+                    .filter(uid -> frescas.containsKey(uid)).count();
+            long totalVivos = yusa().getJugadoresVivos().size();
+
+            // Válido si tiene la mayoría (tolera jugadores sin carta en fase YUSA)
+            boolean manasValidas = !frescas.isEmpty() && vivosConCarta >= Math.max(1, totalVivos - 1);
 
             if (!manasValidas && intento < MAX_INTENTOS_MANOS) {
                 System.out.println("[YUSA] Manos no listas (intento " + (intento + 1)
@@ -918,7 +955,7 @@ public class PartidaControllerYusa extends PartidaControllerBase {
                 if (!resultado.isEmpty()) {
                     manos.clear();
                     manos.putAll(resultado);
-                    
+
                 }
 
                 mostrarCartasDeRonda();
@@ -1127,9 +1164,10 @@ public class PartidaControllerYusa extends PartidaControllerBase {
         rondaEnCurso = false;
         faseRondaActual = null;
         snapshotCartas.clear();
-        ultimoEstadoTs = -1L;
+        //ultimoEstadoTs = -1L;
         ultimaDecisionTs = -1L;
         ordenRondaActual.clear();
+        uidPoseedorYusaActual = null;
         objetivosPorPoseedor.clear();
         soyObjetivoDeYusa = false;
         ocultarPanelDecision();
@@ -1234,6 +1272,7 @@ public class PartidaControllerYusa extends PartidaControllerBase {
 
     private void ocultarCartasDeRonda() {
         mostrandoCartas = false;  // ← desbloquear actualizarInterfaz()
+        tiempoFinUltimaRevelacion = System.currentTimeMillis();
         System.out.println("[YUSA] actualizarInterfaz() desbloqueada. Ocultando cartas.");
         actualizarInterfaz();
     }
@@ -1567,7 +1606,7 @@ public class PartidaControllerYusa extends PartidaControllerBase {
 
         String poseedor = colaYusas.get(0);
         narrarGlobal("Turno de yusa: "
-                + nombres.getOrDefault(poseedor, "Jugador")
+                + nombres.getOrDefault(poseedor, poseedor)
                 + " elige a quién preguntar ("
                 + colaYusas.size() + " yusa(s) pendiente(s)).");
 
@@ -1719,7 +1758,7 @@ public class PartidaControllerYusa extends PartidaControllerBase {
             System.out.println("[DUELO] Palo real: " + paloReal
                     + " | Acertó: " + acerto
                     + " | Pierde vida: " + nombres.getOrDefault(perdedor, perdedor));
-            
+
             boolean eli = yusa().perderVida(perdedor);
 
             narrarGlobal("Yusa " + nombres.getOrDefault(duelo.poseedor(), duelo.poseedor())
@@ -1766,6 +1805,12 @@ public class PartidaControllerYusa extends PartidaControllerBase {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    protected void cargarNombresJugadores() {
+        // Los nombres ya se cargaron en precargarNombres() al inicio.
+        // No hacer peticiones HTTP aquí para no saturar Firebase en cada redibujado.
+        // El mapa 'nombres' ya tiene los valores correctos.
     }
 
 }

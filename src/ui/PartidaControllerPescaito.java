@@ -226,12 +226,23 @@ public class PartidaControllerPescaito extends PartidaControllerBase {
                     finalizarPartida();
                     return;
                 }
-                narrarPrivado(uidLocal, "No tienes cartas ni puedes robar.\nPasas el turno.");
-                bd.actualizarTurno(codigoSala, obtenerSiguienteJugadorConCartas(), idToken);
+                narrarGlobal(nombres.getOrDefault(uidLocal, uidLocal)
+                        + " no tiene cartas ni puede robar. Pasa turno.");
+                PauseTransition delay = new PauseTransition(Duration.seconds(1));
+                delay.setOnFinished(ev -> {
+                    try {
+                        bd.actualizarTurno(codigoSala,
+                                obtenerSiguienteJugadorConCartas(), idToken);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                });
+                delay.play();
                 break;
 
             case ROBAR_AUTOMATICO:
-                narrarPrivado(uidLocal, "No tienes cartas.\nRobas automáticamente para continuar.");
+                narrarGlobal(nombres.getOrDefault(uidLocal, uidLocal)
+                        + " no tenía cartas → roba automáticamente del mazo.");
                 juego.robarCarta(uidLocal, manos, baraja);
                 bd.actualizarMano(codigoSala, uidLocal, manos.get(uidLocal), idToken);
                 bd.actualizarBaraja(codigoSala, baraja, idToken);
@@ -345,20 +356,26 @@ public class PartidaControllerPescaito extends PartidaControllerBase {
         int cartasRecibidas = (int) resultado.get("cartasRecibidas");
 
         if (acierto) {
-            narrarPrivado(uidLocal, "Has robado " + cartasRecibidas + " carta(s).");
+            // Mensaje global para que todos vean qué pasó
+            narrarGlobal(nombres.getOrDefault(uidLocal, uidLocal)
+                    + " le ha preguntado a " + nombres.getOrDefault(uidJugadorObjetivo, uidJugadorObjetivo)
+                    + " por el " + numeroSeleccionado
+                    + " → ¡Lo tenía! Roba " + cartasRecibidas + " carta(s) del " + numeroSeleccionado + ".");
             if (pescaito) {
-                narrarPrivado(uidLocal, "¡Pescaito! Has completado un grupo de 4.");
-            }
-            if (mantieneTurno) {
+                int numeroPescaito = (int) resultado.get("numeroPescaito");
+                narrarGlobal("¡PESCAITO de " + nombres.getOrDefault(uidLocal, uidLocal)
+                        + "! Número " + numeroPescaito + ". Mantiene turno.");
+            } else if (mantieneTurno) {
                 narrarPrivado(uidLocal, "Mantienes el turno.");
             }
         } else {
-            narrarPrivado(uidLocal, "Fallaste.");
+            narrarGlobal(nombres.getOrDefault(uidLocal, uidLocal)
+                    + " le ha preguntado a " + nombres.getOrDefault(uidJugadorObjetivo, uidJugadorObjetivo)
+                    + " por el " + numeroSeleccionado
+                    + " → Fallo. " + nombres.getOrDefault(uidJugadorObjetivo, uidJugadorObjetivo)
+                    + " no tenía el " + numeroSeleccionado + ".");
             if (debeRobar) {
-                narrarPrivado(uidLocal, "Debes robar una carta.");
-            }
-            if (!mantieneTurno) {
-                narrarPrivado(uidLocal, "El turno pasa al siguiente jugador.");
+                narrarPrivado(uidLocal, "Debes robar una carta del mazo.");
             }
         }
 
@@ -366,14 +383,22 @@ public class PartidaControllerPescaito extends PartidaControllerBase {
             int numeroPescaito = (int) resultado.get("numeroPescaito");
             bd.registrarPescaito(codigoSala, uidLocal, numeroPescaito, idToken);
             bd.actualizarDescarte(codigoSala, descarte, idToken);
-            narrarPrivado(uidLocal, "¡Pescaito!");
         }
 
         if (debeRobar) {
-            narrarPrivado(uidLocal, "Debes robar una carta porque no acertaste.");
             if (baraja.isEmpty()) {
-                narrarPrivado(uidLocal, "No quedan cartas en la baraja. Pasas el turno.");
-                bd.actualizarTurno(codigoSala, obtenerSiguienteJugador(uidTurnoActual), idToken);
+                narrarGlobal(nombres.getOrDefault(uidLocal, uidLocal)
+                        + " no puede robar — baraja vacía. Pasa turno.");
+                PauseTransition delay = new PauseTransition(Duration.seconds(1));
+                delay.setOnFinished(ev -> {
+                    try {
+                        bd.actualizarTurno(codigoSala,
+                                obtenerSiguienteJugador(uidTurnoActual), idToken);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                });
+                delay.play();
                 numeroSeleccionado = null;
                 numeroPreguntadoAntesDeRobar = null;
                 esperandoRobo = false;
@@ -427,7 +452,8 @@ public class PartidaControllerPescaito extends PartidaControllerBase {
 
             bd.actualizarMano(codigoSala, uidLocal, mano, idToken);
             bd.actualizarBaraja(codigoSala, baraja, idToken);
-            narrarPrivado(uidLocal, "Has robado un " + numeroRobado);
+            narrarGlobal(nombres.getOrDefault(uidLocal, uidLocal)
+                    + " roba del mazo."); //narrarPrivado(uidLocal, "Has robado un " + numeroRobado);
 
             boolean haPescado = ((JuegoPescaito) juego)
                     .haPescadoAlRobar(cartaRobada, numeroPreguntadoAntesDeRobar);
@@ -435,18 +461,40 @@ public class PartidaControllerPescaito extends PartidaControllerBase {
                     .esPescaitoPorRobo(uidLocal, manos, descarte);
 
             if (pescaito) {
-                narrarPrivado(uidLocal, "¡PESCAITO!");
+                narrarGlobal("¡PESCAITO de " + nombres.getOrDefault(uidLocal, uidLocal)
+                        + "! Número " + juego.obtenerNumeroCarta(cartaRobada) + ".");
                 bd.actualizarMano(codigoSala, uidLocal, manos.get(uidLocal), idToken);
                 bd.actualizarDescarte(codigoSala, descarte, idToken);
                 bd.registrarPescaito(codigoSala, uidLocal, juego.obtenerNumeroCarta(cartaRobada), idToken);
             }
 
             if (haPescado) {
-                narrarPrivado(uidLocal, "¡Has pescado! Mantienes turno.");
-                bd.actualizarTurno(codigoSala, uidLocal, idToken);
+                narrarGlobal("¡"
+                        + nombres.getOrDefault(uidLocal, uidLocal)
+                        + " ha pescado el " + numeroRobado
+                        + "! Mantiene el turno.");
+                PauseTransition delay = new PauseTransition(Duration.seconds(1));
+                delay.setOnFinished(ev -> {
+                    try {
+                        bd.actualizarTurno(codigoSala, uidLocal, idToken);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                });
+                delay.play();
             } else {
-                narrarPrivado(uidLocal, "Pasas turno.");
-                bd.actualizarTurno(codigoSala, obtenerSiguienteJugador(uidTurnoActual), idToken);
+                narrarGlobal(nombres.getOrDefault(uidLocal, uidLocal)
+                        + " no ha pescado. Pasa el turno.");
+                PauseTransition delay = new PauseTransition(Duration.seconds(1));
+                delay.setOnFinished(ev -> {
+                    try {
+                        bd.actualizarTurno(codigoSala,
+                                obtenerSiguienteJugador(uidTurnoActual), idToken);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                });
+                delay.play();
             }
 
         } catch (Exception e) {

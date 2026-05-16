@@ -138,7 +138,7 @@ public class PartidaOfflineYusaController extends PartidaControllerBase {
                 configurarLayoutEscena(stage);
             }
             actualizarInterfaz();
-            narrarGlobal(IdiomaManager.get("yusa.global.offline.inicio", numIAs));
+            narrarGlobal(IdiomaManager.get("yusaOffline.global.offline.inicio", numIAs));
             iniciarRondaLocal();
         });
     }
@@ -231,7 +231,7 @@ public class PartidaOfflineYusaController extends PartidaControllerBase {
 
     @Override
     protected void onClickMazo() {
-        narrarPrivado(UID_JUGADOR, IdiomaManager.get("yusa.privado.avisoUsarBotones"));
+        narrarPrivado(UID_JUGADOR, IdiomaManager.get("yusaOffline.privado.avisoUsarBotones"));
     }
 
     // ── CORRECCIÓN 1: onZonaRivalClick ───────────────────────────────────────
@@ -265,19 +265,19 @@ public class PartidaOfflineYusaController extends PartidaControllerBase {
             String nombre = nombres.getOrDefault(uid, "Jugador");
             int v = vidas.get(uid);
 
-            resultado = IdiomaManager.get("yusa.popUpFinal.victoria", nombre);
-            detalle = IdiomaManager.get("yusa.popUpFinal.detalle", v);
+            resultado = IdiomaManager.get("yusaOffline.popUpFinal.victoria", nombre);
+            detalle = IdiomaManager.get("yusaOffline.popUpFinal.detalle", v);
             icono = "/ui/graphicResources/imagenes/imgGanador.png";
 
         } else {
 
-            resultado = IdiomaManager.get("yusa.popUpFinal.empate");
+            resultado = IdiomaManager.get("yusaOffline.popUpFinal.empate");
 
             String lista = supervivientes.stream()
                     .map(u -> nombres.getOrDefault(u, u))
                     .collect(Collectors.joining(", "));
 
-            detalle = IdiomaManager.get("yusa.popUpFinal.detalleEmpate", lista);
+            detalle = IdiomaManager.get("yusaOffline.popUpFinal.detalleEmpate", lista);
             icono = "/ui/graphicResources/imagenes/imgEmpate.png";
         }
 
@@ -305,7 +305,7 @@ public class PartidaOfflineYusaController extends PartidaControllerBase {
 
         faseRondaActual = yusa().determinarFaseRonda(manos);
         narrarGlobal(
-                IdiomaManager.get("yusa.global.ronda.nueva", textoFase(faseRondaActual))
+                IdiomaManager.get("yusaOffline.global.ronda.nueva", textoFase(faseRondaActual))
         );
 
         PauseTransition pausa = new PauseTransition(Duration.millis(800));
@@ -402,16 +402,16 @@ public class PartidaOfflineYusaController extends PartidaControllerBase {
 
                 narrarPrivado(
                         UID_JUGADOR,
-                        IdiomaManager.get("yusa.privado.ultimo")
+                        IdiomaManager.get("yusaOffline.privado.ultimo")
                 );
 
                 mostrarBotonesDecision(
-                        IdiomaManager.get("yusa.privado.ultimo.op1"),
-                        IdiomaManager.get("yusa.privado.ultimo.op2"),
+                        IdiomaManager.get("yusaOffline.privado.ultimo.op1"),
+                        IdiomaManager.get("yusaOffline.privado.ultimo.op2"),
                         dec -> {
                             ocultarPanelDecisionLocal();
 
-                            if (dec.equals(IdiomaManager.get("yusa.privado.ultimo.op2"))) {
+                            if (dec.equals(IdiomaManager.get("yusaOffline.privado.ultimo.op2"))) {
                                 ejecutarRoboUltimo(UID_JUGADOR);
                             } else {
                                 avanzarDecisionNormal(UID_JUGADOR, false);
@@ -423,16 +423,16 @@ public class PartidaOfflineYusaController extends PartidaControllerBase {
 
                 narrarPrivado(
                         UID_JUGADOR,
-                        IdiomaManager.get("yusa.privado.normal")
+                        IdiomaManager.get("yusaOffline.privado.normal")
                 );
 
                 mostrarBotonesDecision(
-                        IdiomaManager.get("yusa.privado.normal.op1"),
-                        IdiomaManager.get("yusa.privado.normal.op2"),
+                        IdiomaManager.get("yusaOffline.privado.normal.op1"),
+                        IdiomaManager.get("yusaOffline.privado.normal.op2"),
                         dec -> {
                             ocultarPanelDecisionLocal();
 
-                            boolean cambia = dec.equals(IdiomaManager.get("yusa.privado.normal.op2"));
+                            boolean cambia = dec.equals(IdiomaManager.get("yusaOffline.privado.normal.op2"));
                             avanzarDecisionNormal(UID_JUGADOR, cambia);
                         }
                 );
@@ -444,7 +444,7 @@ public class PartidaOfflineYusaController extends PartidaControllerBase {
     private void decisionIA_Normal(String uidIA, boolean esUltimo) {
 
         programarAccionIA(
-                IdiomaManager.get("yusa.global.ia.decide", nombres.get(uidIA)),
+                IdiomaManager.get("yusaOffline.global.ia.decide", nombres.get(uidIA)),
                 () -> {
 
                     boolean cambia = new Random().nextBoolean();
@@ -456,8 +456,8 @@ public class PartidaOfflineYusaController extends PartidaControllerBase {
 
                         narrarGlobal(
                                 IdiomaManager.get(
-                                        roba ? "yusa.global.ia.ultimo.op2"
-                                                : "yusa.global.ia.ultimo.op1",
+                                        roba ? "yusaOffline.global.ia.ultimo.op2"
+                                                : "yusaOffline.global.ia.ultimo.op1",
                                         nomIA
                                 )
                         );
@@ -472,8 +472,8 @@ public class PartidaOfflineYusaController extends PartidaControllerBase {
 
                         narrarGlobal(
                                 IdiomaManager.get(
-                                        cambia ? "yusa.global.ia.normal.op2"
-                                                : "yusa.global.ia.normal.op1",
+                                        cambia ? "yusaOffline.global.ia.normal.op2"
+                                                : "yusaOffline.global.ia.normal.op1",
                                         nomIA
                                 )
                         );
@@ -499,7 +499,7 @@ public class PartidaOfflineYusaController extends PartidaControllerBase {
         String nombre = nombres.getOrDefault(uid, "Jugador");
 
         if (baraja.isEmpty()) {
-            narrarGlobal(IdiomaManager.get("yusa.global.ultimo.barajaVacia", nombre));
+            narrarGlobal(IdiomaManager.get("yusaOffline.global.ultimo.barajaVacia", nombre));
             guardarSnapshotLocal();
             revelarCartas();
             return;
@@ -513,7 +513,7 @@ public class PartidaOfflineYusaController extends PartidaControllerBase {
 
         mano.add(baraja.remove(0));
 
-        narrarGlobal(IdiomaManager.get("yusa.global.ultimo.cambia", nombre));
+        narrarGlobal(IdiomaManager.get("yusaOffline.global.ultimo.cambia", nombre));
         actualizarInterfaz();
 
         JuegoYusa.FaseRonda nueva = yusa().determinarFaseRonda(manos);
@@ -523,7 +523,7 @@ public class PartidaOfflineYusaController extends PartidaControllerBase {
             faseRondaActual = nueva;
 
             narrarGlobal(
-                    IdiomaManager.get("yusa.global.fase.cambia", textoFase(nueva))
+                    IdiomaManager.get("yusaOffline.global.fase.cambia", textoFase(nueva))
             );
 
             PauseTransition p = new PauseTransition(Duration.seconds(1));
@@ -570,14 +570,14 @@ public class PartidaOfflineYusaController extends PartidaControllerBase {
 
         if (esIA(uidDoce)) {
             narrarGlobal(
-                    IdiomaManager.get("yusa.global.doce.ia.tiene",
+                    IdiomaManager.get("yusaOffline.global.doce.ia.tiene",
                             nombres.get(uidDoce),
                             (int) DELAY_IA_SEG)
             );
             PauseTransition p = new PauseTransition(Duration.seconds(DELAY_IA_SEG));
             p.setOnFinished(ev -> {
                 narrarGlobal(
-                        IdiomaManager.get("yusa.global.doce.ia.juega",
+                        IdiomaManager.get("yusaOffline.global.doce.ia.juega",
                                 nombres.get(uidFinal))
                 );
                 guardarSnapshotLocal();
@@ -586,7 +586,7 @@ public class PartidaOfflineYusaController extends PartidaControllerBase {
             p.play();
         } else {
             // Humano: botón con countdown
-            Button btn = new Button(IdiomaManager.get("yusa.privado.doce.boton", 10));
+            Button btn = new Button(IdiomaManager.get("yusaOffline.privado.doce.boton", 10));
             btn.setStyle("-fx-font-size:14px;-fx-padding:8 18;");
             int[] seg = {10};
             Runnable jugar = () -> {
@@ -601,7 +601,7 @@ public class PartidaOfflineYusaController extends PartidaControllerBase {
             tickDoceLocal = new PauseTransition(Duration.seconds(1));
             tickDoceLocal.setOnFinished(ev -> {
                 seg[0]--;
-                btn.setText(IdiomaManager.get("yusa.privado.doce.boton", seg[0]));
+                btn.setText(IdiomaManager.get("yusaOffline.privado.doce.boton", seg[0]));
                 if (seg[0] > 0) {
                     tickDoceLocal.playFromStart();
                 } else {
@@ -617,7 +617,7 @@ public class PartidaOfflineYusaController extends PartidaControllerBase {
             tickDoceLocal.play();
             narrarPrivado(
                     UID_JUGADOR,
-                    IdiomaManager.get("yusa.privado.doce.tienes", 10)
+                    IdiomaManager.get("yusaOffline.privado.doce.tienes", 10)
             );
         }
     }
@@ -641,14 +641,14 @@ public class PartidaOfflineYusaController extends PartidaControllerBase {
         if (colaYusas.size() == 1) {
             narrarGlobal(
                     IdiomaManager.get(
-                            "yusa.global.faseYusa.uno",
+                            "yusaOffline.global.faseYusa.uno",
                             nombres.getOrDefault(colaYusas.get(0), "Jugador")
                     )
             );
         } else {
             narrarGlobal(
                     IdiomaManager.get(
-                            "yusa.global.faseYusa.varias",
+                            "yusaOffline.global.faseYusa.varias",
                             colaYusas.size()
                     )
             );
@@ -673,7 +673,7 @@ public class PartidaOfflineYusaController extends PartidaControllerBase {
         String poseedor = colaYusas.get(0);
         narrarGlobal(
                 IdiomaManager.get(
-                        "yusa.global.pregunta.turno",
+                        "yusaOffline.global.pregunta.turno",
                         nombres.getOrDefault(poseedor, "Jugador")
                 )
         );
@@ -685,7 +685,7 @@ public class PartidaOfflineYusaController extends PartidaControllerBase {
         } else {
             narrarPrivado(
                     UID_JUGADOR,
-                    IdiomaManager.get("yusa.privado.pregunta.tienes")
+                    IdiomaManager.get("yusaOffline.privado.pregunta.tienes")
             );
             // El humano hará clic en la zona del rival → onZonaRivalClick → onElegirObjetivoHumano
         }
@@ -701,7 +701,7 @@ public class PartidaOfflineYusaController extends PartidaControllerBase {
         if (uidObjetivo == null || uidObjetivo.equals(UID_JUGADOR)) {
             narrarPrivado(
                     UID_JUGADOR,
-                    IdiomaManager.get("yusa.privado.objetivo.noTuMismo")
+                    IdiomaManager.get("yusaOffline.privado.objetivo.noTuMismo")
             );
             return;
         }
@@ -710,14 +710,14 @@ public class PartidaOfflineYusaController extends PartidaControllerBase {
         if (manoObj == null || manoObj.isEmpty()) {
             narrarPrivado(
                     UID_JUGADOR,
-                    IdiomaManager.get("yusa.privado.objetivo.sinCarta")
+                    IdiomaManager.get("yusaOffline.privado.objetivo.sinCarta")
             );
             return;
         }
 
         narrarGlobal(
                 IdiomaManager.get(
-                        "yusa.global.objetivo.pregunta",
+                        "yusaOffline.global.objetivo.pregunta",
                         nombres.get(UID_JUGADOR),
                         nombres.getOrDefault(uidObjetivo, "")
                 )
@@ -738,7 +738,7 @@ public class PartidaOfflineYusaController extends PartidaControllerBase {
                 JuegoYusa.Palo paloAleatorio = palosArray()[new Random().nextInt(4)];
                 narrarGlobal(
                         IdiomaManager.get(
-                                "yusa.global.objetivo.respuesta",
+                                "yusaOffline.global.objetivo.respuesta",
                                 nombres.getOrDefault(uidObjetivo, ""),
                                 paloAleatorio.name()
                         )
@@ -758,7 +758,7 @@ public class PartidaOfflineYusaController extends PartidaControllerBase {
      */
     private void elegirObjetivoIA(String poseedor) {
         programarAccionIA(
-                IdiomaManager.get("yusa.global.ia.eligeObjetivo", nombres.get(poseedor)),
+                IdiomaManager.get("yusaOffline.global.ia.eligeObjetivo", nombres.get(poseedor)),
                 () -> {
 
                     List<String> candidatos = yusa().getJugadoresVivos().stream()
@@ -772,7 +772,7 @@ public class PartidaOfflineYusaController extends PartidaControllerBase {
                     if (candidatos.isEmpty()) {
                         narrarGlobal(
                                 IdiomaManager.get(
-                                        "yusa.global.ia.sinCandidatos",
+                                        "yusaOffline.global.ia.sinCandidatos",
                                         nombres.get(poseedor)
                                 )
                         );
@@ -784,7 +784,7 @@ public class PartidaOfflineYusaController extends PartidaControllerBase {
                     String objetivo = candidatos.get(new Random().nextInt(candidatos.size()));
                     narrarGlobal(
                             IdiomaManager.get(
-                                    "yusa.global.ia.pregunta",
+                                    "yusaOffline.global.ia.pregunta",
                                     nombres.getOrDefault(poseedor, "IA"),
                                     nombres.getOrDefault(objetivo, "")
                             )
@@ -805,7 +805,7 @@ public class PartidaOfflineYusaController extends PartidaControllerBase {
                             JuegoYusa.Palo palo = palosArray()[new Random().nextInt(4)];
                             narrarGlobal(
                                     IdiomaManager.get(
-                                            "yusa.global.ia.respuesta",
+                                            "yusaOffline.global.ia.respuesta",
                                             nombres.getOrDefault(objetivo, ""),
                                             palo.name()
                                     )
@@ -828,7 +828,7 @@ public class PartidaOfflineYusaController extends PartidaControllerBase {
         narrarPrivado(
                 UID_JUGADOR,
                 IdiomaManager.get(
-                        "yusa.privado.pedirPalo",
+                        "yusaOffline.privado.pedirPalo",
                         nombres.getOrDefault(poseedor, "tu rival")
                 )
         );
@@ -836,7 +836,7 @@ public class PartidaOfflineYusaController extends PartidaControllerBase {
             ocultarPanelDecisionLocal();
             narrarGlobal(
                     IdiomaManager.get(
-                            "yusa.global.humano.responde",
+                            "yusaOffline.global.humano.responde",
                             nombres.get(UID_JUGADOR),
                             palo.name()
                     )
@@ -968,12 +968,12 @@ public class PartidaOfflineYusaController extends PartidaControllerBase {
 
             narrarGlobal(
                     IdiomaManager.get(
-                            "yusa.global.duelo.resultado",
+                            "yusaOffline.global.duelo.resultado",
                             nombres.getOrDefault(duelo.poseedor(), duelo.poseedor()),
                             nombres.getOrDefault(duelo.objetivo(), duelo.objetivo()),
                             duelo.paloElegido().name(),
                             paloReal.name(),
-                            IdiomaManager.get(acerto ? "yusa.global.duelo.acerto" : "yusa.global.duelo.fallo"),
+                            IdiomaManager.get(acerto ? "yusaOffline.global.duelo.acerto" : "yusaOffline.global.duelo.fallo"),
                             nombres.getOrDefault(perdedor, perdedor),
                             yusa().getVidas(perdedor)
                     )
@@ -981,7 +981,7 @@ public class PartidaOfflineYusaController extends PartidaControllerBase {
             if (eli) {
                 narrarGlobal(
                         IdiomaManager.get(
-                                "yusa.global.duelo.eliminado",
+                                "yusaOffline.global.duelo.eliminado",
                                 nombres.getOrDefault(perdedor, perdedor)
                         )
                 );
@@ -1018,7 +1018,7 @@ public class PartidaOfflineYusaController extends PartidaControllerBase {
             // Empate → mini-ronda
             String ne = perdedores.stream().map(u -> nombres.getOrDefault(u, u)).collect(Collectors.joining(", "));
             narrarGlobal(
-                    IdiomaManager.get("yusa.global.desempate.empate", ne)
+                    IdiomaManager.get("yusaOffline.global.desempate.empate", ne)
             );
             empatadosActuales = new ArrayList<>(perdedores);
             enDesempate = true;
@@ -1038,7 +1038,7 @@ public class PartidaOfflineYusaController extends PartidaControllerBase {
             boolean eli = yusa().perderVida(uid);
             narrarGlobal(
                     IdiomaManager.get(
-                            "yusa.global.normal.perdedor",
+                            "yusaOffline.global.normal.perdedor",
                             nombres.getOrDefault(uid, uid),
                             yusa().getVidas(uid)
                     )
@@ -1046,7 +1046,7 @@ public class PartidaOfflineYusaController extends PartidaControllerBase {
             if (eli) {
                 narrarGlobal(
                         IdiomaManager.get(
-                                "yusa.global.normal.eliminado",
+                                "yusaOffline.global.normal.eliminado",
                                 nombres.getOrDefault(uid, uid)
                         )
                 );
@@ -1097,7 +1097,7 @@ public class PartidaOfflineYusaController extends PartidaControllerBase {
                 .map(u -> nombres.getOrDefault(u, u)).collect(Collectors.joining(" vs "));
         narrarGlobal(
                 IdiomaManager.get(
-                        "yusa.global.desempate.inicio",
+                        "yusaOffline.global.desempate.inicio",
                         ne,
                         textoFase(faseRondaActual)
                 )
@@ -1125,11 +1125,11 @@ public class PartidaOfflineYusaController extends PartidaControllerBase {
 
     private void mostrarOverlayDesempateLocal(String nombresEmpatados) {
         ocultarOverlayDesempateLocal();
-        Label lbl = new Label(IdiomaManager.get("yusa.privado.overlay.desempate.titulo"));
+        Label lbl = new Label(IdiomaManager.get("yusaOffline.privado.overlay.desempate.titulo"));
         lbl.setStyle("-fx-font-size:26px;-fx-font-weight:bold;-fx-text-fill:#ff4444;");
         Label lblN = new Label(nombresEmpatados);
         lblN.setStyle("-fx-font-size:18px;-fx-text-fill:white;-fx-font-weight:bold;");
-        Label info = new Label(IdiomaManager.get("yusa.privado.overlay.desempate.info"));
+        Label info = new Label(IdiomaManager.get("yusaOffline.privado.overlay.desempate.info"));
         info.setStyle("-fx-font-size:14px;-fx-text-fill:#cccccc;-fx-text-alignment:center;");
         info.setTextAlignment(javafx.scene.text.TextAlignment.CENTER);
         VBox contenido = new VBox(12, lbl, lblN, info);
@@ -1172,7 +1172,7 @@ public class PartidaOfflineYusaController extends PartidaControllerBase {
 
         if (yusa().debeResetearBaraja(descarte)) {
             yusa().resetearBaraja(baraja, descarte);
-            narrarGlobal(IdiomaManager.get("yusa.global.ronda.barajar"));
+            narrarGlobal(IdiomaManager.get("yusaOffline.global.ronda.barajar"));
         }
 
         // Rotar director
@@ -1217,10 +1217,10 @@ public class PartidaOfflineYusaController extends PartidaControllerBase {
         ocultarPanelDecisionLocal();
         String est = "-fx-font-size:13px;-fx-padding:7 14;";
 
-        Button bC = new Button(IdiomaManager.get("yusa.privado.palo.coronas"));
-        Button bV = new Button(IdiomaManager.get("yusa.privado.palo.balanzas"));
-        Button bD = new Button(IdiomaManager.get("yusa.privado.palo.dianas"));
-        Button bCz = new Button(IdiomaManager.get("yusa.privado.palo.corazones"));
+        Button bC = new Button(IdiomaManager.get("yusaOffline.privado.palo.coronas"));
+        Button bV = new Button(IdiomaManager.get("yusaOffline.privado.palo.balanzas"));
+        Button bD = new Button(IdiomaManager.get("yusaOffline.privado.palo.dianas"));
+        Button bCz = new Button(IdiomaManager.get("yusaOffline.privado.palo.corazones"));
 
         bC.setStyle(est);
         bV.setStyle(est);
@@ -1271,14 +1271,14 @@ public class PartidaOfflineYusaController extends PartidaControllerBase {
         javafx.scene.text.Font fuente = javafx.scene.text.Font.loadFont(
                 getClass().getResourceAsStream("/ui/graphicResources/fonts/Minecraft.ttf"), 36);
 
-        Label lbl = new Label(IdiomaManager.get("yusa.privado.eliminado.titulo"));
+        Label lbl = new Label(IdiomaManager.get("yusaOffline.privado.eliminado.titulo"));
         if (fuente != null) {
             lbl.setFont(fuente);
         }
         lbl.setStyle("-fx-font-size:36px;-fx-text-fill:#ff2222;-fx-font-weight:bold;"
                 + "-fx-effect:dropshadow(gaussian,rgba(0,0,0,0.95),14,0.7,0,0);");
 
-        Label sub = new Label(IdiomaManager.get("yusa.privado.eliminado.sub"));
+        Label sub = new Label(IdiomaManager.get("yusaOffline.privado.eliminado.sub"));
         if (fuente != null) {
             sub.setFont(
                     javafx.scene.text.Font.loadFont(getClass().getResourceAsStream("/ui/graphicResources/fonts/Minecraft.ttf"), 16));
@@ -1442,7 +1442,7 @@ public class PartidaOfflineYusaController extends PartidaControllerBase {
         } catch (IOException e) {
             e.printStackTrace();
             Label fallback = new Label(
-                    IdiomaManager.get("yusa.global.final.fallback")
+                    IdiomaManager.get("yusaOffline.global.final.fallback")
             );
             fallback.setStyle("-fx-text-fill:white;-fx-font-size:24px;");
             overlayFinal.getChildren().clear();
