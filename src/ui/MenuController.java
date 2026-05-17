@@ -38,29 +38,85 @@ import ui.audio.ButtonSound;
  * modificar y almacenar el idioma preferido. Su correcto funcionamiento
  * garantiza una navegación fluida y coherente.
  * </p>
+ *
+ * @author Javier Coronilla Castellano.
  */
 public class MenuController {
 
+    // -------------------------------
+    // ELEMENTOS GRÁFICOS
+    // -------------------------------
+    /**
+     * Imagen para el botón de idioma.
+     */
     @FXML
-    private ImageView btnIdiomaImage; // Imagen para el botón de idioma.
+    private ImageView btnIdiomaImage;
+
+    /**
+     * Imagen para el botón de ayuda.
+     */
     @FXML
-    private ImageView btnOfflineImage; // Imagen para el botón de menú offline.
+    private ImageView btnAyudaImage;
+
+    /**
+     * Imagen para el botón de menú offline.
+     */
     @FXML
-    private ImageView btnOnlineImage; // Imagen para el botón de menú online.
+    private ImageView btnOfflineImage;
+
+    /**
+     * Imagen para el botón de menú online.
+     */
     @FXML
-    private Button btnIdioma; // Botón para el idioma.
+    private ImageView btnOnlineImage;
+
+    /**
+     * Botón para el idioma.
+     */
     @FXML
-    private Button btnOnline; // Botón para el menú online.
+    private Button btnIdioma;
+
+    /**
+     * Botón para la ayuda.
+     */
     @FXML
-    private Button btnOffline; // Botón para el menú offline.
+    private Button btnAyuda;
+
+    /**
+     * Botón para el menú online.
+     */
     @FXML
-    private Button btnSalir; // Botón para cerrar la aplicación.
+    private Button btnOnline;
+
+    /**
+     * Botón para el menú offline.
+     */
     @FXML
-    private Button btnOpciones; // Botón para el popUp de sonido.
+    private Button btnOffline;
+
+    /**
+     * Botón para cerrar la aplicación.
+     */
     @FXML
-    private ImageView logoImage; // Imagen para el logo.
+    private Button btnSalir;
+
+    /**
+     * Botón para el popUp de sonido.
+     */
     @FXML
-    private StackPane rootMenuPrincipal; // Capa raíz.
+    private Button btnOpciones;
+
+    /**
+     * Imagen para el logo.
+     */
+    @FXML
+    private ImageView logoImage;
+
+    /**
+     * Capa raíz.
+     */
+    @FXML
+    private StackPane rootMenuPrincipal;
 
     /**
      * Servicio encargado de leer y actualizar datos del usuario en Firebase.
@@ -99,6 +155,7 @@ public class MenuController {
         Animaciones.animarBoton(btnOpciones);
         Animaciones.animarBoton(btnSalir);
         Animaciones.animarBoton(btnIdioma);
+        Animaciones.animarBoton(btnAyuda);
 
         // Activar sonidos.
         ButtonSound.activar(btnIdioma);
@@ -106,6 +163,7 @@ public class MenuController {
         ButtonSound.activar(btnOnline);
         ButtonSound.activar(btnOpciones);
         ButtonSound.activar(btnSalir);
+        ButtonSound.activar(btnAyuda);
 
         // Listeners para los botones.
         btnIdioma.setOnAction(e -> cambiarIdioma()); // Cambiamos el idioma.
@@ -116,6 +174,10 @@ public class MenuController {
             MainApp.desconectarUsuario(); // Desconectamos al usuario de Firebase antes de salir de la aplicación.
             Platform.exit();
         });
+        btnAyuda.setOnAction(e -> {
+            Animaciones.mostrarAyuda(rootMenuPrincipal,IdiomaManager.getBundle().getString("ayuda.texto"));
+        });
+
     }
 
     /**
@@ -127,7 +189,7 @@ public class MenuController {
      * </p>
      */
     private void abrirModoOnline() {
-        MainApp.cambiarEscena("menuOnline.fxml", 800, 600);
+        MainApp.cambiarEscena("menuOnline.fxml", 1200, 1000);
     }
 
     /**
@@ -139,11 +201,12 @@ public class MenuController {
      * </p>
      */
     private void abrirModoUnJugador() {
-        MainApp.cambiarEscena("menuOffline.fxml", 1000, 700);
+        MainApp.cambiarEscena("menuOffline.fxml", 1200, 1000);
     }
 
     /**
-     * Cambia el idioma de la interfaz entre español e inglés y recarga la escena.
+     * Cambia el idioma de la interfaz entre español e inglés y recarga la
+     * escena.
      * <p>
      * Si el usuario está logueado, también actualiza su idioma en Firebase para
      * mantener coherencia entre sesiones.
@@ -153,7 +216,7 @@ public class MenuController {
 
         // Obtenemos el código del idioma actual desde el gestor de idiomas.
         String actLenguage = IdiomaManager.getCodigoIdioma();
-        
+
         // Alternamos el idioma. Si está en español pasa a inglés y viceversa.
         String nuevo = actLenguage.equals("es") ? "en" : "es";
 
@@ -172,7 +235,7 @@ public class MenuController {
         }
 
         // Recargamos la escena con el nuevo idioma aplicado.
-        MainApp.cambiarEscena("menuPrincipal.fxml", 800, 600);
+        MainApp.cambiarEscena("menuPrincipal.fxml", 1200, 1000);
     }
 
 }

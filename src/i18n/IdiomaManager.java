@@ -27,6 +27,8 @@ import javafx.scene.image.Image;
  * Su uso es estático, actuando como un punto único de acceso para cualquier
  * parte de la interfaz que necesite textos o recursos dependientes del idioma.
  * </p>
+ * 
+ * @author Javier Coronilla Castellano.
  */
 public class IdiomaManager {
 
@@ -154,7 +156,7 @@ public class IdiomaManager {
         // Buscamos recurso en el classpath.
         URL url = IdiomaManager.class.getResource(ruta);
         if (url == null) { // Si no se encuentra, mostramos error.
-            System.err.println("❌ Imagen NO encontrada: " + ruta);
+            System.err.println("Imagen NO encontrada: " + ruta);
             throw new RuntimeException("Imagen no encontrada: " + ruta);
         }
 

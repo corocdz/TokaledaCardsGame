@@ -90,6 +90,17 @@
                         </ImageView>
                     </graphic>
                 </Button>
+                
+                <!-- AYUDA -->
+                <Button fx:id="btnAyuda" style="-fx-background-color: transparent; -fx-padding: 0;">
+                    <graphic>
+                        <ImageView fitWidth="100" preserveRatio="true">
+                            <image>
+                                <Image url="@graphicResources/imagenes/btnAyuda.png"/>
+                            </image>
+                        </ImageView>
+                    </graphic>
+                </Button>
             </HBox>
         </bottom>
     </BorderPane>

@@ -36,7 +36,7 @@ package firebase;
  * <li>La clase no tiene constructor porque no debe instanciarse.</li>
  * </ul>
  *
- * @author Javier Coronilla Castellano
+ * @author Javier Coronilla Castellano.
  */
 public class FirebaseConfig {
 

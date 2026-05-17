@@ -132,11 +132,8 @@
                             </image>
                         </ImageView>
                     </graphic>
-                </Button>
-            </HBox>
-            
-            
-            
+                </Button>               
+            </HBox>                                   
         </bottom>
 
     </BorderPane>

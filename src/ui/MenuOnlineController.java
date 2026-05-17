@@ -48,36 +48,95 @@ import ui.audio.ButtonSound;
  * funcionamiento garantiza que la creación y unión a salas sea segura,
  * intuitiva y consistente con la arquitectura de Firebase.
  * </p>
+ * 
+ * @author Javier Coronilla Castellano.
  */
 public class MenuOnlineController {
 
+    // -------------------------------
+    // ELEMENTOS GRÁFICOS
+    // -------------------------------
+    /**
+     * Botón de idioma.
+     */
     @FXML
-    private Button btnIdioma; // Botón de idioma.
+    private Button btnIdioma;
+    
+    /**
+     * Botón para crear sala online.
+     */
     @FXML
-    private Button btnCrearSala; // Botón para crear sala online.
+    private Button btnCrearSala;
+    
+    /**
+     * Botón para unirse a una sala online.
+     */
     @FXML
-    private Button btnUnirseSala; // Botón para unirse a una sala online.
+    private Button btnUnirseSala;
+    
+    /**
+     * Botón para volver al menú principal.
+     */
     @FXML
-    private Button btnVolver; // Botón para volver al menú principal.
+    private Button btnVolver;
+    
+    /**
+     * Botón para cerrar la aplicación.
+     */
     @FXML
-    private Button btnSalir; // Botón para cerrar la aplicación.
+    private Button btnSalir;
+    
+    /**
+     * Botón del popUp de sonido.
+     */
     @FXML
-    private Button btnOpciones; // Botón del popUp de sonido.
+    private Button btnOpciones;
+    
+    /**
+     * Imagen para el logo.
+     */
     @FXML
-    private ImageView logoImage; // Imagen para el logo.
+    private ImageView logoImage;
+    
+    /**
+     * Imagen para el botón de crear sala.
+     */
     @FXML
-    private ImageView btnCrearSalaImage; // Imagen para el botón de crear sala.
+    private ImageView btnCrearSalaImage;
+    
+    /**
+     * Imagen para el botón de idioma.
+     */
     @FXML
-    private ImageView btnIdiomaImage; // Imagen para el botón de idioma.
+    private ImageView btnIdiomaImage;
+    
+    /**
+     * Imagen para el botón de unirse a sala.
+     */
     @FXML
-    private ImageView btnUnirseSalaImage; // Imagen para el botón de unirse a sala.
+    private ImageView btnUnirseSalaImage;
+    
+    /**
+     * Imagen para el botón de volver al menú principal.
+     */
     @FXML
-    private ImageView btnVolverImage; // Imagen para el botón de volver al menú principal.
+    private ImageView btnVolverImage;
+    
+    /**
+     * Capa raíz.
+     */
     @FXML
-    private StackPane rootMenu; // Capa raíz.
+    private StackPane rootMenu;
+    
+    /**
+     * Overlay oscuro para cuando sale el popUp de crear y unirse a sala.
+     */
     @FXML
-    private Pane overlayOscuro; // Overlay oscuro para cuando sale el popUp de crear y unirse a sala.
+    private Pane overlayOscuro;      
 
+    // -------------------------------
+    // ELEMENTOS GENERALES
+    // -------------------------------
     /**
      * Bundle de idioma cargado dinámicamente según la elección del usuario.
      */
@@ -129,7 +188,7 @@ public class MenuOnlineController {
         btnIdioma.setOnAction(e -> cambiarIdioma());
         btnCrearSala.setOnAction(e -> mostrarPopupCrearSala()); // Muestra el popUp de crearSala.
         btnUnirseSala.setOnAction(e -> mostrarPopupUnirseSala()); // Muestra el popUp de unirseSala.
-        btnVolver.setOnAction(e -> MainApp.cambiarEscena("menuPrincipal.fxml", 800, 600));
+        btnVolver.setOnAction(e -> MainApp.cambiarEscena("menuPrincipal.fxml", 1200, 1000));
         btnOpciones.setOnAction(e -> Animaciones.mostrarPopupSonido(rootMenu));
         btnSalir.setOnAction(e -> {
             MainApp.desconectarUsuario();
@@ -295,8 +354,8 @@ public class MenuOnlineController {
      * Durante el proceso se crean los siguientes nodos en Firebase:
      * </p>
      * <ul>
-     * <li>{@code salas/CODIGO} — Contiene los datos completos de la sala.</li>
-     * <li>{@code usuarios/UID/salaActual} — Indica en qué sala está el
+     * <li>{@code salas/CODIGO} - Contiene los datos completos de la sala.</li>
+     * <li>{@code usuarios/UID/salaActual} - Indica en qué sala está el
      * usuario.</li>
      * </ul>
      *
@@ -373,7 +432,7 @@ public class MenuOnlineController {
             SalaContext.codigoSalaActual = codigo;
 
             // Cargamos pantalla de Sala Online.
-            MainApp.cambiarEscena("salaOnline.fxml", 800, 600);
+            MainApp.cambiarEscena("salaOnline.fxml", 1200, 1000);
 
         } catch (Exception e) { // Capturamos posible excepción por cualquier problema de conexión, con Firebase, etc.
             e.printStackTrace();
@@ -597,7 +656,7 @@ public class MenuOnlineController {
             SalaContext.codigoSalaActual = codigo;
 
             // Entramos a la sala.
-            MainApp.cambiarEscena("salaOnline.fxml", 800, 600);
+            MainApp.cambiarEscena("salaOnline.fxml", 1200, 1000);
 
         } catch (Exception e) { // Capturamos posibles excepciones.
             e.printStackTrace();
@@ -649,7 +708,7 @@ public class MenuOnlineController {
             }
         }
 
-        MainApp.cambiarEscena("menuOnline.fxml", 800, 600);
+        MainApp.cambiarEscena("menuOnline.fxml", 1200, 1000);
     }
 
 }

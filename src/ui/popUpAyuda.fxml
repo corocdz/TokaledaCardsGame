@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.geometry.*?>
+<?import javafx.scene.shape.Rectangle?>
+
+<StackPane fx:id="rootAyuda" xmlns="http://javafx.com/javafx/17"
+           xmlns:fx="http://javafx.com/fxml/1"
+           fx:controller="ui.PopUpAyudaController">
+
+    <Rectangle fill="rgba(0,0,0,0.55)" />
+
+    <VBox fx:id="box" alignment="CENTER" spacing="20"
+          maxWidth="850"
+          style="-fx-background-color: rgba(30,0,40,0.95);
+                 -fx-background-radius: 20;
+                 -fx-border-color: #2fa1ff;
+                 -fx-border-width: 3;
+                 -fx-border-radius: 20;">
+
+        <padding>
+            <Insets top="80" right="30" bottom="30" left="30"/>
+        </padding>
+
+        <Label fx:id="lblTitulo"
+               text="AYUDA"
+               style="-fx-font-family: 'Minecraft';
+                      -fx-font-size: 32px;
+                      -fx-text-fill: #2fa1ff;" />
+
+        <Label fx:id="lblMensaje"
+               wrapText="true"
+               maxWidth="650"
+               textAlignment="CENTER"
+               alignment="CENTER"
+               style="-fx-font-family: 'Minecraft';
+                      -fx-font-size: 22px;
+                      -fx-text-fill: white;"
+               text="Texto de ayuda"/>
+
+        <Button fx:id="btnCerrar"
+                text="Cerrar"
+                style="-fx-font-family: 'Minecraft';
+                       -fx-font-size: 22px;
+                       -fx-background-color: #2fa1ff;
+                       -fx-text-fill: white;
+                       -fx-background-radius: 10;"/>
+    </VBox>
+
+</StackPane>
+

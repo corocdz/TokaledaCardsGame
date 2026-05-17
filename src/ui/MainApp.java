@@ -59,7 +59,7 @@ import ui.audio.MusicManager;
  * actualizar el estado de la partida online sin bloquear la interfaz.</li>
  * </ul>
  *
- * @author Javier Coronilla Castellano
+ * @author Javier Coronilla Castellano.
  */
 public class MainApp extends Application {
 
@@ -115,7 +115,7 @@ public class MainApp extends Application {
         Parent root = loader.load(); // Árbol de nodos fxml.
 
         // Dimensiones, centrado y mostramos UI.
-        primaryStage.setScene(new Scene(root, 1100, 900));
+        primaryStage.setScene(new Scene(root, 1200, 1000));
         primaryStage.centerOnScreen();
         primaryStage.show();
 
@@ -187,7 +187,6 @@ public class MainApp extends Application {
                     System.out.println(">>> CAMBIANDO A MÚSICA DE PARTIDA"); // debug
                     MusicManager.playPartidaMusic(); // Método que pone la música de partida de fondo activa.
                 }
-
                 // Modo pantalla completa.
                 primaryStage.setFullScreenExitHint("");
                 primaryStage.setFullScreenExitKeyCombination(
@@ -230,7 +229,7 @@ public class MainApp extends Application {
 
             } else {
 
-                // ⭐ SI NO ES PARTIDA → MÚSICA GENERAL ⭐
+                // ⭐ SI NO ES PARTIDA - MÚSICA GENERAL ⭐
                 if (!MusicManager.isPlaying("menu")) {
                     MusicManager.playMenuMusic();
                 }

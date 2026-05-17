@@ -42,7 +42,7 @@ import java.net.URL;
  * interpretación en los controladores de la interfaz.</li>
  * </ul>
  * 
- * @author Javier Coronilla Castellano
+ * @author Javier Coronilla Castellano.
  */
 public class FirebaseAuthService {
 
@@ -107,13 +107,13 @@ public class FirebaseAuthService {
      *
      * <h3>Códigos devueltos:</h3>
      * <ul>
-     * <li>"OK" → registro correcto</li>
-     * <li>"EMAIL_EXISTS" → el email ya está registrado</li>
-     * <li>"INVALID_EMAIL" → formato de email incorrecto</li>
-     * <li>"WEAK_PASSWORD" → contraseña demasiado débil</li>
-     * <li>"MISSING_PASSWORD" → no se envió contraseña</li>
-     * <li>"NETWORK_ERROR" → no hay conexión o Firebase no responde</li>
-     * <li>"UNKNOWN_ERROR" → error inesperado</li>
+     * <li>"OK" - registro correcto</li>
+     * <li>"EMAIL_EXISTS" - el email ya está registrado</li>
+     * <li>"INVALID_EMAIL" - formato de email incorrecto</li>
+     * <li>"WEAK_PASSWORD" - contraseña demasiado débil</li>
+     * <li>"MISSING_PASSWORD" - no se envió contraseña</li>
+     * <li>"NETWORK_ERROR" - no hay conexión o Firebase no responde</li>
+     * <li>"UNKNOWN_ERROR" - error inesperado</li>
      * </ul>
      */
     public String register(String email, String password) throws IOException {
@@ -168,13 +168,13 @@ public class FirebaseAuthService {
      *
      * <h3>Códigos devueltos:</h3>
      * <ul>
-     * <li>"OK" → login correcto</li>
-     * <li>"CREDENCIALES_INCORRECTAS" → email inexistente o contraseña
+     * <li>"OK" - login correcto</li>
+     * <li>"CREDENCIALES_INCORRECTAS" - email inexistente o contraseña
      * incorrecta</li>
-     * <li>"USER_DISABLED" → cuenta deshabilitada</li>
-     * <li>"INVALID_EMAIL" → email con formato inválido</li>
-     * <li>"NETWORK_ERROR" → error de conexión</li>
-     * <li>"UNKNOWN_ERROR" → error inesperado</li>
+     * <li>"USER_DISABLED" - cuenta deshabilitada</li>
+     * <li>"INVALID_EMAIL" - email con formato inválido</li>
+     * <li>"NETWORK_ERROR" - error de conexión</li>
+     * <li>"UNKNOWN_ERROR" - error inesperado</li>
      * </ul>
      */
     public String login(String email, String password) throws IOException {

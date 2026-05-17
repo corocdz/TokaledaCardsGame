@@ -1,5 +1,6 @@
 package ui;
 
+import i18n.IdiomaManager;
 import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -21,10 +22,10 @@ import partidaUTIL.JuegoYusa;
 import ui.audio.ButtonSound;
 
 /**
- * PartidaControllerYusa — arquitectura de estado único.
+ * PartidaControllerYusa - arquitectura de estado único.
  *
- * CANAL DIRECTOR → TODOS: partida/estadoRonda (polling 200ms) CANAL NO-DIRECTOR
- * → DIR: partida/decisionJugador (polling 200ms)
+ * CANAL DIRECTOR - TODOS: partida/estadoRonda (polling 200ms) CANAL NO-DIRECTOR
+ * - DIR: partida/decisionJugador (polling 200ms)
  *
  * El director es quien tiene uidTurnoActual en ese momento. Rota cada ronda.
  * Solo él escribe resultados en Firebase.
@@ -50,7 +51,6 @@ public class PartidaControllerYusa extends PartidaControllerBase {
     private long ultimoEstadoTs = -1L;
     private long ultimaDecisionTs = -1L;
     private PauseTransition pausaRevelado = null;
-    // Añade junto a los otros campos de estado:
     private PauseTransition tickDoce = null;
     private long tiempoFinUltimaRevelacion = 0L;
     private static final long VENTANA_PROTECCION_MS = 3000; // 3 segundos
@@ -73,7 +73,7 @@ public class PartidaControllerYusa extends PartidaControllerBase {
      */
     private javafx.scene.layout.StackPane overlayEspectador = null;
     /**
-     * Overlay de eliminado — se muestra cuando el jugador pierde todas las
+     * Overlay de eliminado - se muestra cuando el jugador pierde todas las
      * vidas
      */
     private javafx.scene.layout.StackPane overlayEliminado = null;
@@ -84,7 +84,6 @@ public class PartidaControllerYusa extends PartidaControllerBase {
     // ─── Estado ronda YUSA ───────────────────────────────────────────────────
     private final Map<String, String> objetivosPorPoseedor = new HashMap<>();
     private boolean soyObjetivoDeYusa = false;
-    // Añade este campo junto a los otros campos de estado:
     private boolean mostrandoCartas = false;
     private static final int MAX_INTENTOS_MANOS = 10;
     private static final int DELAY_REINTENTO_MS = 400;
@@ -272,17 +271,25 @@ public class PartidaControllerYusa extends PartidaControllerBase {
 
             case "ESPERANDO_DECISION" -> {
                 if (uidLocal.equals(turnoUid)) {
-                    narrarPrivado(uidLocal, "¿Te gusta tu carta?");
-                    mostrarBotonesDecision("Me la quedo", "La cambio con el siguiente",
-                            dec -> enviarDecision(dec.contains("quedo") ? "QUEDAR" : "CAMBIAR"));
+                    narrarPrivado(uidLocal,
+                            IdiomaManager.get("yusaOnline.privado.teGustaTuCarta"));
+                    mostrarBotonesDecision(
+                            IdiomaManager.get("yusaOnline.ui.meLaQuedo"),
+                            IdiomaManager.get("yusaOnline.ui.laCambioConSiguiente"),
+                            dec -> enviarDecision(dec.contains("quedo") ? "QUEDAR" : "CAMBIAR")
+                    );
                 }
             }
 
             case "ESPERANDO_DECISION_ULTIMO" -> {
                 if (uidLocal.equals(turnoUid)) {
-                    narrarPrivado(uidLocal, "Eres el último. ¿Te quedas o cambias por la baraja?");
-                    mostrarBotonesDecision("Me la quedo", "Cambio por la baraja",
-                            dec -> enviarDecision(dec.contains("quedo") ? "QUEDAR_ULTIMO" : "ROBAR_ULTIMO"));
+                    narrarPrivado(uidLocal,
+                            IdiomaManager.get("yusaOnline.privado.ultimoTeQuedasOCambias"));
+                    mostrarBotonesDecision(
+                            IdiomaManager.get("yusaOnline.ui.meLaQuedo"),
+                            IdiomaManager.get("yusaOnline.ui.cambioPorBaraja"),
+                            dec -> enviarDecision(dec.contains("quedo") ? "QUEDAR_ULTIMO" : "ROBAR_ULTIMO")
+                    );
                 }
             }
 
@@ -291,7 +298,11 @@ public class PartidaControllerYusa extends PartidaControllerBase {
                     mostrarBotonJugarDoce();
                 } else {
                     narrarPrivado(uidLocal,
-                            nombres.getOrDefault(turnoUid, turnoUid) + " tiene un 12. Esperando...");
+                            IdiomaManager.get(
+                                    "yusaOnline.privado.otroTieneDoce",
+                                    nombres.getOrDefault(turnoUid, turnoUid)
+                            )
+                    );
                 }
             }
 
@@ -299,12 +310,15 @@ public class PartidaControllerYusa extends PartidaControllerBase {
                 // turnoUid = poseedor que debe elegir AHORA
                 if (turnoUid != null && turnoUid.equals(uidLocal) && tieneYusa(uidLocal)) {
                     narrarPrivado(uidLocal,
-                            "Es tu turno de yusa. Pulsa la zona de un rival.");
+                            IdiomaManager.get("yusaOnline.privado.esTuTurnoYusa"));
                 } else if (turnoUid != null && !turnoUid.equals(uidLocal)) {
                     uidPoseedorYusaActual = turnoUid;
                     narrarPrivado(uidLocal,
-                            nombres.getOrDefault(turnoUid, turnoUid)
-                            + " está eligiendo a quién preguntar su yusa...");
+                            IdiomaManager.get(
+                                    "yusaOnline.privado.otroEligiendoObjetivo",
+                                    nombres.getOrDefault(turnoUid, turnoUid)
+                            )
+                    );
                 }
             }
 
@@ -312,7 +326,9 @@ public class PartidaControllerYusa extends PartidaControllerBase {
                 if (uidLocal.equals(turnoUid)) {
                     soyObjetivoDeYusa = true;
                     if (panelDecision == null) {
-                        narrarPrivado(uidLocal, "Te preguntan el palo. Elige.");
+                        narrarPrivado(uidLocal,
+                                IdiomaManager.get("yusaOnline.privado.tePreguntanPalo")
+                        );
                         mostrarBotonesPalo();
                     }
                 }
@@ -369,7 +385,9 @@ public class PartidaControllerYusa extends PartidaControllerBase {
 
     @Override
     protected void onClickMazo() {
-        narrarPrivado(uidLocal, "Usa los botones.");
+        narrarPrivado(uidLocal,
+                IdiomaManager.get("yusaOnline.privado.usaBotones")
+        );
     }
 
     @Override
@@ -415,13 +433,17 @@ public class PartidaControllerYusa extends PartidaControllerBase {
             String nombre = nombres.getOrDefault(uidGanador, uidGanador);
             int vidasGanador = vidas.getOrDefault(uidGanador, 1);
             // Siempre el mismo mensaje para todos los clientes
-            resultado = "¡Ha ganado " + nombre + "!";
-            detalle = "Con " + vidasGanador + " vida"
-                    + (vidasGanador != 1 ? "s" : "") + " restante"
-                    + (vidasGanador != 1 ? "s" : "");
+            resultado = IdiomaManager.get(
+                    "yusaOnline.popUpFinal.victoria",
+                    nombre
+            );
+            detalle = detalle = IdiomaManager.get(
+                    "yusaOnline.popUpFinal.detalleVictoria",
+                    vidasGanador
+            );
         } else if (supervivientes.isEmpty()) {
-            resultado = "¡Empate!";
-            detalle = "Ningún jugador sobrevivió.";
+            resultado = IdiomaManager.get("yusaOnline.popUpFinal.empate");
+            detalle = IdiomaManager.get("yusaOnline.popUpFinal.detalleEmpateNadie");
         } else {
             // Más de un superviviente (no debería ocurrir en Yusa normal)
             // Mostrar al que tiene más vidas
@@ -430,10 +452,14 @@ public class PartidaControllerYusa extends PartidaControllerBase {
                     .orElse(supervivientes.get(0));
             String nombre = nombres.getOrDefault(uidMasVidas, uidMasVidas);
             int vidasMax = vidas.getOrDefault(uidMasVidas, 1);
-            resultado = "¡Ha ganado " + nombre + "!";
-            detalle = "Con " + vidasMax + " vida"
-                    + (vidasMax != 1 ? "s" : "") + " restante"
-                    + (vidasMax != 1 ? "s" : "");
+            resultado = IdiomaManager.get(
+                    "yusaOnline.popUpFinal.victoria",
+                    nombre
+            );
+            detalle = IdiomaManager.get(
+                    "yusaOnline.popUpFinal.detalleVictoria",
+                    vidasMax
+            );
         }
 
         String icono;
@@ -476,10 +502,20 @@ public class PartidaControllerYusa extends PartidaControllerBase {
         bd.actualizarBaraja(codigoSala, baraja, idToken);
 
         faseRondaActual = yusa().determinarFaseRonda(manos);
-        narrarGlobal("— Ronda nueva — " + textoFase(faseRondaActual));
+        narrarGlobal(
+                IdiomaManager.get(
+                        "yusaOnline.global.rondaNueva",
+                        textoFase(faseRondaActual)
+                )
+        );
 
-        narrarGlobal(nombres.getOrDefault(uidTurnoActual, uidTurnoActual)
-                + " comienza la ronda — " + textoFase(faseRondaActual));
+        narrarGlobal(
+                IdiomaManager.get(
+                        "yusaOnline.global.comienzaRonda",
+                        nombres.getOrDefault(uidTurnoActual, uidTurnoActual),
+                        textoFase(faseRondaActual)
+                )
+        );
 
         switch (faseRondaActual) {
             case NORMAL ->
@@ -494,11 +530,11 @@ public class PartidaControllerYusa extends PartidaControllerBase {
     private String textoFase(JuegoYusa.FaseRonda f) {
         return switch (f) {
             case YUSA ->
-                "¡Hay Yusa!";
+                IdiomaManager.get("yusaOnline.fase.yusa");
             case DOCE ->
-                "¡Hay un 12!";
+                IdiomaManager.get("yusaOnline.fase.doce");
             case NORMAL ->
-                "Ronda normal.";
+                IdiomaManager.get("yusaOnline.fase.normal");
         };
     }
 
@@ -526,13 +562,22 @@ public class PartidaControllerYusa extends PartidaControllerBase {
         // Si soy yo el que debe decidir, mostrar botones directamente
         if (siguiente.equals(uidLocal)) {
             if (esUltimo) {
-                narrarPrivado(uidLocal, "Eres el último. ¿Te quedas o cambias por la baraja?");
-                mostrarBotonesDecision("Me la quedo", "Cambio por la baraja",
-                        dec -> procesarDecisionPropia(dec.contains("quedo") ? "QUEDAR_ULTIMO" : "ROBAR_ULTIMO"));
+                narrarPrivado(uidLocal,
+                        IdiomaManager.get("yusaOnline.privado.ultimoTeQuedasOCambias"));
+                mostrarBotonesDecision(
+                        IdiomaManager.get("yusaOnline.ui.meLaQuedo"),
+                        IdiomaManager.get("yusaOnline.ui.cambioPorBaraja"),
+                        dec -> procesarDecisionPropia(dec.contains("quedo") ? "QUEDAR_ULTIMO" : "ROBAR_ULTIMO")
+                );
             } else {
-                narrarPrivado(uidLocal, "¿Te gusta tu carta?");
-                mostrarBotonesDecision("Me la quedo", "La cambio con el siguiente",
-                        dec -> procesarDecisionPropia(dec.contains("quedo") ? "QUEDAR" : "CAMBIAR"));
+                narrarPrivado(uidLocal,
+                        IdiomaManager.get("yusaOnline.privado.teGustaTuCarta")
+                );
+                mostrarBotonesDecision(
+                        IdiomaManager.get("yusaOnline.ui.meLaQuedo"),
+                        IdiomaManager.get("yusaOnline.ui.laCambioConSiguiente"),
+                        dec -> procesarDecisionPropia(dec.contains("quedo") ? "QUEDAR" : "CAMBIAR")
+                );
             }
         }
     }
@@ -603,10 +648,20 @@ public class PartidaControllerYusa extends PartidaControllerBase {
             String sig = ordenRondaActual.get(1);
             yusa().intercambiarCartas(uid, sig, manos);
             bd.publicarManosYusa(codigoSala, manos, idToken);
-            narrarGlobal(nombres.getOrDefault(uid, uid) + " intercambia carta con "
-                    + nombres.getOrDefault(sig, sig) + ".");
+            narrarGlobal(
+                    IdiomaManager.get(
+                            "yusaOnline.global.intercambiaCarta",
+                            nombres.getOrDefault(uid, uid),
+                            nombres.getOrDefault(sig, sig)
+                    )
+            );
         } else if ("QUEDAR".equals(decision)) {
-            narrarGlobal(nombres.getOrDefault(uid, uid) + " se queda su carta.");
+            narrarGlobal(
+                    IdiomaManager.get(
+                            "yusaOnline.global.seQuedaCarta",
+                            nombres.getOrDefault(uid, uid)
+                    )
+            );
         }
         ordenRondaActual.remove(0);
         publicarSiguienteDecision();
@@ -624,7 +679,12 @@ public class PartidaControllerYusa extends PartidaControllerBase {
 
     private void ejecutarRoboUltimo(String uid) throws IOException {
         if (baraja.isEmpty()) {
-            narrarGlobal(nombres.getOrDefault(uid, uid) + " quiso cambiar pero la baraja está vacía.");
+            narrarGlobal(
+                    IdiomaManager.get(
+                            "yusaOnline.global.cambioBarajaVacia",
+                            nombres.getOrDefault(uid, uid)
+                    )
+            );
             publicarRevelarCartas();
             return;
         }
@@ -638,12 +698,22 @@ public class PartidaControllerYusa extends PartidaControllerBase {
         bd.publicarManosYusa(codigoSala, manos, idToken);
         bd.actualizarBaraja(codigoSala, baraja, idToken);
         bd.actualizarDescarte(codigoSala, descarte, idToken);
-        narrarGlobal(nombres.getOrDefault(uid, uid) + " cambió su carta por la baraja.");
+        narrarGlobal(
+                IdiomaManager.get(
+                        "yusaOnline.global.cambioPorBaraja",
+                        nombres.getOrDefault(uid, uid)
+                )
+        );
 
         JuegoYusa.FaseRonda nueva = yusa().determinarFaseRonda(manos);
         if (nueva != JuegoYusa.FaseRonda.NORMAL) {
             faseRondaActual = nueva;
-            narrarGlobal("¡La carta cambia la fase a " + textoFase(nueva) + "!");
+            narrarGlobal(
+                    IdiomaManager.get(
+                            "yusaOnline.global.cambiaFase",
+                            textoFase(nueva)
+                    )
+            );
             switch (nueva) {
                 case DOCE ->
                     iniciarFaseDoce();
@@ -675,7 +745,13 @@ public class PartidaControllerYusa extends PartidaControllerBase {
             return;
         }
         bd.publicarEstadoRonda(codigoSala, "JUGAR_DOCE", JuegoYusa.FaseRonda.DOCE.name(), uidDoce, idToken);
-        narrarGlobal(nombres.getOrDefault(uidDoce, uidDoce) + " tiene un 12. ¡Que lo lance!");
+        narrarGlobal(
+                IdiomaManager.get(
+                        "yusaOnline.global.tieneDoceQueLoLance",
+                        nombres.getOrDefault(uidDoce, uidDoce)
+                )
+        );
+
         if (uidDoce.equals(uidLocal)) {
             mostrarBotonJugarDoce();
         }
@@ -683,7 +759,9 @@ public class PartidaControllerYusa extends PartidaControllerBase {
 
     private void onDoceJugado() {
         ocultarPanelDecision();
-        StringBuilder sb = new StringBuilder("Cartas al descubierto — ");
+        StringBuilder sb = new StringBuilder(
+                IdiomaManager.get("yusaOnline.global.cartasDescubiertas")
+        );
         for (String uid : yusa().getJugadoresVivos()) {
             List<String> m = manos.get(uid);
             if (m != null && !m.isEmpty()) {
@@ -719,15 +797,24 @@ public class PartidaControllerYusa extends PartidaControllerBase {
 
         // Narrar cuántas yusas hay
         if (colaYusas.size() == 1) {
-            narrarGlobal(nombres.getOrDefault(colaYusas.get(0), colaYusas.get(0))
-                    + " tiene una yusa.");
+            narrarGlobal(
+                    IdiomaManager.get(
+                            "yusaOnline.global.unPoseedorYusa",
+                            nombres.getOrDefault(colaYusas.get(0), colaYusas.get(0))
+                    )
+            );
+
         } else {
             String nombresYusas = colaYusas.stream()
                     .map(u -> nombres.getOrDefault(u, u))
                     .collect(Collectors.joining(", "));
-            narrarGlobal("emojiDepolla".repeat(colaYusas.size())
-                    + " ¡" + colaYusas.size() + " yusas simultáneas! ("
-                    + nombresYusas + "). Preguntan por turnos.");
+            narrarGlobal(
+                    IdiomaManager.get(
+                            "yusaOnline.global.variasYusas",
+                            colaYusas.size(),
+                            nombresYusas
+                    )
+            );
         }
 
         publicarSiguientePreguntaYusa();
@@ -735,15 +822,22 @@ public class PartidaControllerYusa extends PartidaControllerBase {
 
     private void onElegirObjetivoYusa(String uidObjetivo) {
         if (!tieneYusa(uidLocal)) {
-            narrarPrivado(uidLocal, "No tienes yusa.");
+            narrarPrivado(uidLocal,
+                    IdiomaManager.get("yusaOnline.privado.noTienesYusa")
+            );
+
             return;
         }
         if (uidObjetivo.equals(uidLocal)) {
-            narrarPrivado(uidLocal, "No puedes elegirte a ti mismo.");
+            narrarPrivado(uidLocal,
+                    IdiomaManager.get("yusaOnline.privado.noElegirte")
+            );
             return;
         }
         if (objetivosPorPoseedor.containsKey(uidLocal)) {
-            narrarPrivado(uidLocal, "Ya elegiste objetivo en esta ronda.");
+            narrarPrivado(uidLocal,
+                    IdiomaManager.get("yusaOnline.privado.objetivoYaElegido")
+            );
             return;
         }
         // Comprobar que es el turno de este poseedor.
@@ -751,7 +845,9 @@ public class PartidaControllerYusa extends PartidaControllerBase {
         if (uidLocal.equals(uidTurnoActual)
                 && !colaYusas.isEmpty()
                 && !colaYusas.get(0).equals(uidLocal)) {
-            narrarPrivado(uidLocal, "Espera tu turno de yusa.");
+            narrarPrivado(uidLocal,
+                    IdiomaManager.get("yusaOnline.privado.esperaTurnoYusa")
+            );
             return;
         }
 
@@ -761,9 +857,13 @@ public class PartidaControllerYusa extends PartidaControllerBase {
             snapshotCartas.put(uidLocal, m.get(0));
         }
 
-        narrarGlobal(nombres.getOrDefault(uidLocal, uidLocal)
-                + " pregunta a " + nombres.getOrDefault(uidObjetivo, uidObjetivo)
-                + " el palo de su yusa.");
+        narrarGlobal(
+                IdiomaManager.get(
+                        "yusaOnline.global.preguntaPaloYusa",
+                        nombres.getOrDefault(uidLocal, uidLocal),
+                        nombres.getOrDefault(uidObjetivo, uidObjetivo)
+                )
+        );
 
         try {
             bd.actualizarObjetivoYusa(codigoSala, uidLocal, uidObjetivo, idToken);
@@ -781,12 +881,22 @@ public class PartidaControllerYusa extends PartidaControllerBase {
         ocultarPanelDecision();
         soyObjetivoDeYusa = false;
         enviarDecision("PALO_" + palo.name());
-        narrarPrivado(uidLocal, "Elegiste " + palo.name() + ". Esperando...");
+        narrarPrivado(uidLocal,
+                IdiomaManager.get(
+                        "yusaOnline.privado.elegistePalo",
+                        palo.name()
+                )
+        );
         // Usar el campo guardado en lugar de buscar en objetivosPorPoseedor
         String nomPoseedor = nombres.getOrDefault(uidPoseedorYusaActual, uidPoseedorYusaActual);
-        narrarGlobal(nombres.getOrDefault(uidLocal, uidLocal)
-                + " ha respondido " + palo.name()
-                + " a la yusa de " + nomPoseedor + ".");
+        narrarGlobal(
+                IdiomaManager.get(
+                        "yusaOnline.global.respondePaloYusa",
+                        nombres.getOrDefault(uidLocal, uidLocal),
+                        palo.name(),
+                        nomPoseedor
+                )
+        );
     }
 
     private void procesarPaloRecibido(String uidObjetivo, String decision) {
@@ -808,9 +918,6 @@ public class PartidaControllerYusa extends PartidaControllerBase {
                             -> objetivosPorPoseedor.putIfAbsent(pos, obj));
                 }
 
-                // ── Bug 1: procesarPaloRecibido ──────────────────────────────────────────
-// En lugar de publicar REVELAR_CARTAS inmediatamente, guardar el contexto
-// y avanzar al siguiente poseedor. Solo revelar cuando la cola esté vacía.
                 Platform.runLater(() -> {
                     String poseedor = null;
                     if (!colaYusas.isEmpty()) {
@@ -857,7 +964,6 @@ public class PartidaControllerYusa extends PartidaControllerBase {
                         } else {
                             // Todas las yusas respondidas → revelar cartas
                             // NO llamar a guardarSnapshot() — los snapshots de los poseedores
-                            // ya se guardaron individualmente en la línea 804
                             bd.publicarEstadoRonda(codigoSala, "REVELAR_CARTAS",
                                     JuegoYusa.FaseRonda.YUSA.name(), null, idToken);
                         }
@@ -1000,7 +1106,12 @@ public class PartidaControllerYusa extends PartidaControllerBase {
                 // ── EMPATE: arrancar mini-ronda entre los empatados ──────────────
                 String nombresEmp = perdedores.stream()
                         .map(u -> nombres.getOrDefault(u, u)).collect(Collectors.joining(", "));
-                narrarGlobal("¡Empate entre " + nombresEmp + "! Ronda de desempate.");
+                narrarGlobal(
+                        IdiomaManager.get(
+                                "yusaOnline.global.empateDesempate",
+                                nombresEmp
+                        )
+                );
 
                 // Descartar manos actuales
                 yusa().descartarManosAlFinDeRonda(manos, descarte);
@@ -1009,7 +1120,9 @@ public class PartidaControllerYusa extends PartidaControllerBase {
 
                 if (yusa().debeResetearBaraja(descarte)) {
                     yusa().resetearBaraja(baraja, descarte);
-                    narrarGlobal("¡Se barajan todas las cartas de nuevo!");
+                    narrarGlobal(
+                            IdiomaManager.get("yusaOnline.global.seBarajanCartas")
+                    );
                     bd.actualizarBaraja(codigoSala, baraja, idToken);
                     bd.actualizarDescarte(codigoSala, descarte, idToken);
                 }
@@ -1052,10 +1165,20 @@ public class PartidaControllerYusa extends PartidaControllerBase {
             if (perdedores.size() == 1) {
                 String uid = perdedores.get(0);
                 boolean eli = yusa().perderVida(uid);
-                narrarGlobal(nombres.getOrDefault(uid, uid)
-                        + " pierde una vida → " + yusa().getVidas(uid) + " restantes.");
+                narrarGlobal(
+                        IdiomaManager.get(
+                                "yusaOnline.global.pierdeVida",
+                                nombres.getOrDefault(uid, uid),
+                                yusa().getVidas(uid)
+                        )
+                );
                 if (eli) {
-                    narrarGlobal("¡" + nombres.getOrDefault(uid, uid) + " eliminado!");
+                    narrarGlobal(
+                            IdiomaManager.get(
+                                    "yusaOnline.global.eliminado",
+                                    nombres.getOrDefault(uid, uid)
+                            )
+                    );
                     // Si el eliminado soy yo, mostrar el overlay
                     if (uid.equals(uidLocal)) {
                         mostrarMensajeEliminado();
@@ -1065,11 +1188,21 @@ public class PartidaControllerYusa extends PartidaControllerBase {
             } else if (perdedores.size() > 1) {
                 String ne = perdedores.stream()
                         .map(u -> nombres.getOrDefault(u, u)).collect(Collectors.joining(", "));
-                narrarGlobal("¡Empate entre " + ne + "! Todos pierden una vida.");
+                narrarGlobal(
+                        IdiomaManager.get(
+                                "yusaOnline.global.empatePierdenVida",
+                                ne
+                        )
+                );
                 for (String uid : perdedores) {
                     boolean eli = yusa().perderVida(uid);
                     if (eli) {
-                        narrarGlobal("¡" + nombres.getOrDefault(uid, uid) + " eliminado!");
+                        narrarGlobal(
+                                IdiomaManager.get(
+                                        "yusaOnline.global.eliminado",
+                                        nombres.getOrDefault(uid, uid)
+                                )
+                        );
                         if (uid.equals(uidLocal)) {
                             mostrarMensajeEliminado();
                         }
@@ -1090,7 +1223,9 @@ public class PartidaControllerYusa extends PartidaControllerBase {
 
             if (yusa().debeResetearBaraja(descarte)) {
                 yusa().resetearBaraja(baraja, descarte);
-                narrarGlobal("¡Se barajan todas las cartas de nuevo!");
+                narrarGlobal(
+                        IdiomaManager.get("yusaOnline.global.seBarajanCartas")
+                );
                 bd.actualizarBaraja(codigoSala, baraja, idToken);
                 bd.actualizarDescarte(codigoSala, descarte, idToken);
             }
@@ -1125,7 +1260,9 @@ public class PartidaControllerYusa extends PartidaControllerBase {
         // Reset de baraja AQUÍ — después de haber mostrado las cartas 5s
         if (yusa().debeResetearBaraja(descarte)) {
             yusa().resetearBaraja(baraja, descarte);
-            narrarGlobal("¡Se barajan todas las cartas de nuevo!");
+            narrarGlobal(
+                    IdiomaManager.get("yusaOnline.global.seBarajanCartas")
+            );
             bd.actualizarBaraja(codigoSala, baraja, idToken);
             bd.actualizarDescarte(codigoSala, descarte, idToken);
         }
@@ -1300,7 +1437,7 @@ public class PartidaControllerYusa extends PartidaControllerBase {
         panelDecision = new HBox(16, b1, b2);
         panelDecision.setAlignment(Pos.CENTER);
         StackPane.setAlignment(panelDecision, Pos.BOTTOM_CENTER);
-        panelDecision.setTranslateY(140);
+        panelDecision.setTranslateY(180);
         rootSala.getChildren().add(panelDecision);
     }
 
@@ -1344,7 +1481,7 @@ public class PartidaControllerYusa extends PartidaControllerBase {
         panelDecision = new HBox(16, bC, bV, bD, bCz);
         panelDecision.setAlignment(Pos.CENTER);
         StackPane.setAlignment(panelDecision, Pos.BOTTOM_CENTER);
-        panelDecision.setTranslateY(140); // positivo abajo
+        panelDecision.setTranslateY(180); // positivo abajo
         rootSala.getChildren().add(panelDecision);
     }
 
@@ -1389,8 +1526,7 @@ public class PartidaControllerYusa extends PartidaControllerBase {
                 + "-fx-font-family: 'Minecraft';"
                 + "-fx-text-fill: white;"
                 + "-fx-background-color: rgba(255,105,180,0.55);"
-                + // rosita Tokaleda
-                "-fx-background-radius: 12px;"
+                + "-fx-background-radius: 12px;"
                 + "-fx-padding: 14 28;"
                 + "-fx-border-color: rgba(255,255,255,0.7);"
                 + "-fx-border-width: 2px;"
@@ -1408,7 +1544,10 @@ public class PartidaControllerYusa extends PartidaControllerBase {
         tickDoce = new PauseTransition(Duration.seconds(1));
         tickDoce.setOnFinished(ev -> {
             seg[0]--;
-            btn.setText("Jugar carta (" + seg[0] + "s)");
+            btn.setText(
+                    IdiomaManager.get("yusaOnline.ui.jugarCartaCuentaAtras", seg[0])
+            );
+
             if (seg[0] > 0) {
                 tickDoce.playFromStart();
             } else {
@@ -1421,10 +1560,14 @@ public class PartidaControllerYusa extends PartidaControllerBase {
         panelDecision = new HBox(btn);
         panelDecision.setAlignment(Pos.CENTER);
         StackPane.setAlignment(panelDecision, Pos.BOTTOM_CENTER);
-        panelDecision.setTranslateY(140);
+        panelDecision.setTranslateY(180);
         rootSala.getChildren().add(panelDecision);
         tickDoce.play();
-        narrarPrivado(uidLocal, "Tienes un 12. Pulsa 'Jugar carta'. (20s)");
+        narrarPrivado(
+                uidLocal,
+                IdiomaManager.get("yusaOnline.privado.tienesDoceJugarCarta")
+        );
+
     }
 
     private void detenerTickDoce() {
@@ -1480,7 +1623,7 @@ public class PartidaControllerYusa extends PartidaControllerBase {
                 .map(uid -> nombres.getOrDefault(uid, uid))
                 .collect(Collectors.joining(" vs "));
 
-        javafx.scene.control.Label lblTitulo = new javafx.scene.control.Label("DESEMPATE");
+        javafx.scene.control.Label lblTitulo = new Label(IdiomaManager.get("yusaOnline.ui.desempateTitulo"));
         if (fuenteMinecraft != null) {
             lblTitulo.setFont(fuenteMinecraft);
         }
@@ -1498,8 +1641,7 @@ public class PartidaControllerYusa extends PartidaControllerBase {
                 + "-fx-font-size:18px;-fx-text-fill:white;"
                 + "-fx-font-weight:bold;");
 
-        javafx.scene.control.Label lblInfo = new javafx.scene.control.Label(
-                "Ronda de desempate en curso.\nEspera a que termine.");
+        javafx.scene.control.Label lblInfo = new javafx.scene.control.Label(IdiomaManager.get("yusaOnline.ui.desempateInfo"));
         if (fuenteMinecraft != null) {
             lblInfo.setFont(fuenteMinecraft);
         }
@@ -1573,7 +1715,13 @@ public class PartidaControllerYusa extends PartidaControllerBase {
 
         String nombresEmp = empatadosActuales.stream()
                 .map(u -> nombres.getOrDefault(u, u)).collect(Collectors.joining(" vs "));
-        narrarGlobal("Desempate: " + nombresEmp + " — " + textoFase(faseRondaActual));
+        narrarGlobal(
+                IdiomaManager.get(
+                        "yusaOnline.global.desempateFase",
+                        nombresEmp,
+                        textoFase(faseRondaActual)
+                )
+        );
 
         switch (faseRondaActual) {
             case NORMAL ->
@@ -1605,10 +1753,13 @@ public class PartidaControllerYusa extends PartidaControllerBase {
         }
 
         String poseedor = colaYusas.get(0);
-        narrarGlobal("Turno de yusa: "
-                + nombres.getOrDefault(poseedor, poseedor)
-                + " elige a quién preguntar ("
-                + colaYusas.size() + " yusa(s) pendiente(s)).");
+        narrarGlobal(
+                IdiomaManager.get(
+                        "yusaOnline.global.turnoYusaElegirObjetivo",
+                        nombres.getOrDefault(poseedor, poseedor),
+                        colaYusas.size()
+                )
+        );
 
         // turnoUid = UID del poseedor que debe elegir objetivo AHORA
         bd.publicarEstadoRonda(codigoSala, "ELEGIR_OBJETIVO",
@@ -1658,7 +1809,8 @@ public class PartidaControllerYusa extends PartidaControllerBase {
         System.out.println("[FUENTE] Minecraft: " + (fuenteMinecraft != null ? "cargada ✓" : "no encontrada ✗"));
         System.out.println("[FUENTE] Nombre interno: " + fuenteMinecraft.getName());
 
-        Label lblEliminado = new Label("ESTAS ELIMINADO");
+        Label lblEliminado = new Label(IdiomaManager.get("yusaOnline.ui.eliminadoTitulo"));
+
         if (fuenteMinecraft != null) {
             lblEliminado.setFont(fuenteMinecraft);
         }
@@ -1670,7 +1822,8 @@ public class PartidaControllerYusa extends PartidaControllerBase {
                 + "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.95), 14, 0.7, 0, 0);"
         );
 
-        Label lblSub = new Label("Espera a que termine la partida");
+        Label lblSub = new Label(IdiomaManager.get("yusaOnline.ui.eliminadoSub"));
+
         if (fuenteMinecraft != null) {
             lblEliminado.setFont(fuenteMinecraft);
         }
@@ -1761,16 +1914,29 @@ public class PartidaControllerYusa extends PartidaControllerBase {
 
             boolean eli = yusa().perderVida(perdedor);
 
-            narrarGlobal("Yusa " + nombres.getOrDefault(duelo.poseedor(), duelo.poseedor())
-                    + " → " + nombres.getOrDefault(duelo.objetivo(), duelo.objetivo())
-                    + ": dijo " + duelo.paloElegido().name()
-                    + ", era " + paloReal.name() + ". "
-                    + (acerto ? "¡Acertó! " : "¡Falló! ")
-                    + nombres.getOrDefault(perdedor, perdedor)
-                    + " pierde una vida → " + yusa().getVidas(perdedor) + " restantes.");
+            narrarGlobal(
+                    IdiomaManager.get(
+                            "yusaOnline.global.resultadoDueloYusa",
+                            nombres.getOrDefault(duelo.poseedor(), duelo.poseedor()),
+                            nombres.getOrDefault(duelo.objetivo(), duelo.objetivo()),
+                            duelo.paloElegido().name(),
+                            paloReal.name(),
+                            acerto
+                                    ? IdiomaManager.get("yusaOnline.global.acerto")
+                                    : IdiomaManager.get("yusaOnline.global.fallo"),
+                            nombres.getOrDefault(perdedor, perdedor),
+                            yusa().getVidas(perdedor)
+                    )
+            );
 
             if (eli) {
-                narrarGlobal("¡" + nombres.getOrDefault(perdedor, perdedor) + " eliminado!");
+                narrarGlobal(
+                        IdiomaManager.get(
+                                "yusaOnline.global.eliminado",
+                                nombres.getOrDefault(perdedor, perdedor)
+                        )
+                );
+
                 if (perdedor.equals(uidLocal)) {
                     mostrarMensajeEliminado();
                 }

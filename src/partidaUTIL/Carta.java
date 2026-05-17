@@ -1,24 +1,33 @@
 package partidaUTIL;
 
 /**
- * Clase que representa una carta individual de Tokaleda Cards Game. Dicha carta
- * está compuesta por un número, un palo y una ruta hacia su imagen
+ * Clase que representa una carta individual de Tokaleda Cards Game.
+ *<p>
+ * Dicha carta está compuesta por un número, un palo y una ruta hacia su imagen
  * correspondiente.
- *
+ *</p>
+ * 
+ * <p>
  * Esta clase es inmutable en cuanto a su contenido lógico: una vez creada, el
  * palo, número y ruta de la imagen no cambian.
- *
+ *</p>
+ * 
+ * <p>
  * Se utiliza tanto en los modos Online como en los modos Offline para construir
  * la baraja, repartir las cartas y mostrar las imágenes en la interfaz con las
  * que se juegan a los juegos.
- *
- * @author Javier Coronilla Castellano
+ *</p>
+ * @author Javier Coronilla Castellano.
  */
 public class Carta {
 
     /**
-     * Enum de los palos disponibles en el juego. Cada palo representa una
-     * temática en las cartas.
+     * Enumeración de los palos disponibles en el juego.
+     *
+     * <p>
+     * Cada palo representa una temática visual distinta dentro del diseño
+     * artístico del juego.
+     * </p>
      */
     public enum Palo {
         CORONAS, CORAZONES, BALANZAS, DIANAS
@@ -26,20 +35,29 @@ public class Carta {
 
     /**
      * Palo al que pertenece la carta.
+     * <p>
+     * Este valor es inmutable y se establece únicamente en el constructor.
+     * </p>
      */
     private Palo palo;
 
     /**
-     * Número de la carta (1-12).
+     * Número de la carta (entre 1 y 12).
+     * <p>
+     * Este valor también es inmutable.
+     * </p>
      */
     private int numero;
 
     /**
-     * Ruta dentro del proyecto a la imagen PNG que representa a esa carta.
+     * Ruta dentro del proyecto a la imagen PNG que representa esta carta.
+     * <p>
+     * Debe corresponder a un recurso existente para que la interfaz pueda
+     * mostrar la carta correctamente.
+     * </p>
      */
     private String rutaImagen;
 
-    // public static final String RUTA_DORSO = "/ui/graphicResources/cartas/parteTrasera.png";
     /**
      * Crea una nueva carta con un palo, número y ruta a su imagen.
      *
@@ -81,8 +99,12 @@ public class Carta {
     }
 
     /**
-     * Devuelve una representación textual de la carta. Usado para depuración y
-     * logs.
+     * Devuelve una representación textual de la carta.
+     *
+     * <p>
+     * Este método es útil para depuración, logs y para mostrar cartas en
+     * formato texto cuando no se utiliza la interfaz gráfica.
+     * </p>
      *
      * @return Cadena con el formato "PALO NUMERO".
      */

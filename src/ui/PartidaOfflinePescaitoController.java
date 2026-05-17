@@ -36,7 +36,7 @@ public class PartidaOfflinePescaitoController extends PartidaControllerBase {
     // ─── Constantes ───────────────────────────────────────────────────────────
     private static final String UID_JUGADOR = "jugador";
     private static final String PREFIJO_IA = "ia_";
-    private static final double DELAY_IA_SEG = 2.0; // 5 
+    private static final double DELAY_IA_SEG = 3.0; // antes estaba en 5 
 
     // ─── Estado offline ────────────────────────────────────────────────────────
     private final Map<String, Integer> pescaitosPorJugador = new HashMap<>();
@@ -884,7 +884,10 @@ public class PartidaOfflinePescaitoController extends PartidaControllerBase {
             nuevoCtrl.iniciarOffline(numIAs);
 
             Stage stage = (Stage) overlayFinal.getScene().getWindow();
-            stage.setScene(new Scene(root));
+            stage.setMaximized(false);   // 1. Desmaximizar
+            stage.setScene(new Scene(root)); // 2. Cambiar escena
+            stage.setMaximized(true);    // 3. Maximizar de nuevo
+            stage.show();
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -892,7 +895,7 @@ public class PartidaOfflinePescaitoController extends PartidaControllerBase {
     }
 
     public void volverAlMenu() {
-        MainApp.cambiarEscena("menuOffline.fxml", 800, 600);
+        MainApp.cambiarEscena("menuOffline.fxml", 1200, 1000);
     }
 
     // Añade estos dos métodos en PartidaOfflinePescaitoController:

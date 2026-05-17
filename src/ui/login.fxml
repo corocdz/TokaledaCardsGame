@@ -81,12 +81,13 @@
                                prefWidth="350"
                                maxWidth="600"/>
 
-                <HBox spacing="10" alignment="CENTER">
+                
+                <!--<HBox spacing="10" alignment="CENTER"> 
                     <Button fx:id="btnLoginJ1" text="Login Jugador1"/>
                     <Button fx:id="btnLoginJ2" text="Login Jugador2"/>
                     <Button fx:id="btnLoginJ3" text="Login Jugador3"/>
                     <Button fx:id="btnLoginJ4" text="Login Jugador4"/>
-                </HBox>
+                </HBox>-->
             </VBox>
         </center>
 

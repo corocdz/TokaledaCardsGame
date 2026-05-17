@@ -43,7 +43,7 @@
                    AnchorPane.rightAnchor="0"
                    AnchorPane.topAnchor="-80"
                    style="
-                        -fx-font-size: 32px;
+                        -fx-font-size: 26px;
                         -fx-font-weight: bold;
                         -fx-text-fill: white;
                         -fx-background-color: rgba(255, 105, 180, 0.35);
@@ -90,25 +90,25 @@
         <!-- ZONA ABAJO -->
         <Pane fx:id="zonaAbajo" prefHeight="260" prefWidth="1280" />
 
-        <Label fx:id="lblArriba" layoutX="910" layoutY="210" text="">
+        <Label fx:id="lblArriba" layoutX="950" layoutY="220" text="">
             <font>
                 <Font name="System Bold" size="24.0" />
             </font>
         </Label>
 
-        <Label fx:id="lblIzquierda" layoutX="180" layoutY="510" text="">
+        <Label fx:id="lblIzquierda" layoutX="260" layoutY="510" text="">
             <font>
                 <Font name="System Bold" size="24.0" />
             </font>
         </Label>
 
-        <Label fx:id="lblDerecha" layoutX="1620" layoutY="510" text="">
+        <Label fx:id="lblDerecha" layoutX="1620" layoutY="515" text="">
             <font>
                 <Font name="System Bold" size="24.0" />
             </font>
         </Label>
 
-        <Label fx:id="lblAbajo" layoutX="910.0" layoutY="820.0">
+        <Label fx:id="lblAbajo" layoutX="910.0" layoutY="780.0">
             <font>
                 <Font name="System Bold" size="24.0" />
             </font>

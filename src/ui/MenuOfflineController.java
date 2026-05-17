@@ -47,42 +47,113 @@ import ui.audio.SoundManager;
  * funcionamiento garantiza una experiencia fluida y coherente de los modos de
  * juego disponibles en la aplicación en un entorno Offline para todos.
  * </p>
+ *
+ * @author Javier Coronilla Castellano.
  */
 public class MenuOfflineController {
 
+    // -------------------------------
+    // ELEMENTOS GRÁFICOS
+    // -------------------------------
+    /**
+     * Botón para el idioma.
+     */
     @FXML
-    private Button btnIdioma; // Botón para el idioma.
-    @FXML
-    private Button btnVolver; // Botón para volver al menú principal.
-    @FXML
-    private Button btnSalir; // Botón para cerrar la apliación.
-    @FXML
-    private Button btnOpciones; // Botón para el popUp de sonido.
-    @FXML
-    private Button btnPescaito; // Botón para el modo de juego Pescaito.
-    @FXML
-    private Button btnYusa; // Botón para el modo de Yusa.
-    @FXML
-    private ImageView logoImage; // Imagen para el logo.
-    @FXML
-    private ImageView btnIdiomaImage; // Imagen para el botón de idioma.
-    @FXML
-    private ImageView btnPescaitoImage; // Imagen para el botón del modo Pescaito.
-    @FXML
-    private ImageView btnYusaImage; // Imagen para el botón del modo Yusa.
-    @FXML
-    private ImageView btnVolverImage; // Imagen para el botón del volver al menú principal.
-    @FXML
-    private StackPane rootMenuOffline; // Capa raíz.
-    @FXML
-    private Label lblJugadoresIA; // Texto jugadoresIA.
-    @FXML
-    private Label lblTextoYusa; // Texto informativo de la Yusa.
-    @FXML
-    private Label lblTextoPescaito; // Texto informativo del Pescaito.
-    @FXML
-    private ComboBox<Integer> comboJugadoresIA; // ComboBox para añadir jugadoresIA a la partida.
+    private Button btnIdioma;
 
+    /**
+     * Botón para volver al menú principal.
+     */
+    @FXML
+    private Button btnVolver;
+
+    /**
+     * Botón para cerrar la apliación.
+     */
+    @FXML
+    private Button btnSalir;
+
+    /**
+     * Botón para el popUp de sonido.
+     */
+    @FXML
+    private Button btnOpciones;
+
+    /**
+     * Botón para el modo de juego Pescaito.
+     */
+    @FXML
+    private Button btnPescaito;
+
+    /**
+     * Botón para el modo de Yusa.
+     */
+    @FXML
+    private Button btnYusa;
+
+    /**
+     * Imagen para el logo.
+     */
+    @FXML
+    private ImageView logoImage;
+
+    /**
+     * Imagen para el botón de idioma.
+     */
+    @FXML
+    private ImageView btnIdiomaImage;
+
+    /**
+     * Imagen para el botón del modo Pescaito.
+     */
+    @FXML
+    private ImageView btnPescaitoImage;
+
+    /**
+     * Imagen para el botón del modo Yusa.
+     */
+    @FXML
+    private ImageView btnYusaImage;
+
+    /**
+     * Imagen para el botón del volver al menú principal.
+     */
+    @FXML
+    private ImageView btnVolverImage;
+
+    /**
+     * Capa raíz.
+     */
+    @FXML
+    private StackPane rootMenuOffline;
+
+    /**
+     * Texto jugadoresIA.
+     */
+    @FXML
+    private Label lblJugadoresIA;
+
+    /**
+     * Texto informativo de la Yusa.
+     */
+    @FXML
+    private Label lblTextoYusa;
+
+    /**
+     * Texto informativo del Pescaito.
+     */
+    @FXML
+    private Label lblTextoPescaito;
+
+    /**
+     * ComboBox para añadir jugadoresIA a la partida.
+     */
+    @FXML
+    private ComboBox<Integer> comboJugadoresIA;
+
+    // -------------------------------
+    // ELEMENTOS GENERALES
+    // -------------------------------
     /**
      * Bundle de idioma cargado dinámicamente según la elección del usuario.
      */
@@ -160,7 +231,7 @@ public class MenuOfflineController {
 
         // Listeners para los botones
         btnIdioma.setOnAction(e -> cambiarIdioma()); // Cambiar idioma.
-        btnVolver.setOnAction(e -> MainApp.cambiarEscena("menuPrincipal.fxml", 800, 600)); // Volver al menú principal.
+        btnVolver.setOnAction(e -> MainApp.cambiarEscena("menuPrincipal.fxml", 1200, 1000)); // Volver al menú principal.
         btnOpciones.setOnAction(e -> Animaciones.mostrarPopupSonido(rootMenuOffline)); // Mostrar popUp Sonido.
         btnSalir.setOnAction(e -> { // Salir de la aplicación.
             MainApp.desconectarUsuario(); // Desconectar usuario de la Firebase antes de cerrar aplicación.
@@ -198,10 +269,8 @@ public class MenuOfflineController {
                 // Obtenemos la ventana actual para reemplazar la escena.
                 Stage stage = (Stage) btnPescaito.getScene().getWindow();
 
-                // Establecemos nueva escena con esas dimensiones.
-                stage.setScene(new Scene(root, 1280, 720));
-
-                // Mostramos la ventana con la nueva escena.
+                stage.setScene(new Scene(root));
+                stage.setMaximized(true);
                 stage.show();
 
             } catch (Exception ex) { // Capturamos posibles excepciones.
@@ -228,7 +297,8 @@ public class MenuOfflineController {
                 Parent root = loader.load();
                 controller.iniciarOffline(numIAs);
                 Stage stage = (Stage) btnYusa.getScene().getWindow();
-                stage.setScene(new Scene(root, 1280, 720));
+                stage.setScene(new Scene(root));
+                stage.setMaximized(true);
                 stage.show();
             } catch (Exception ex) {
                 ex.printStackTrace();
@@ -262,7 +332,7 @@ public class MenuOfflineController {
             }
         }
 
-        MainApp.cambiarEscena("menuOffline.fxml", 800, 600);
+        MainApp.cambiarEscena("menuOffline.fxml", 1200, 1000);
     }
 
 }

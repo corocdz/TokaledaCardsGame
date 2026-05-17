@@ -54,7 +54,7 @@ package ui;
  * </p>
  * 
  * 
- * @author Javier Coronilla Castellano
+ * @author Javier Coronilla Castellano.
  */
 public class SalaContext {
 

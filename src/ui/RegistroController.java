@@ -52,44 +52,113 @@ import ui.audio.ButtonSound;
  * </ul>
  *
  *
- * @author Javier Coronilla Castellano
+ * @author Javier Coronilla Castellano.
  *
  */
 public class RegistroController {
 
+    // -------------------------------
+    // ELEMENTOS GRÁFICOS
+    // -------------------------------
+    /**
+     * TextField para el nombre de usuario.
+     */
     @FXML
-    private TextField txtNombre; // TextField para el nombre de usuario.
-    @FXML
-    private TextField txtEmail; // TextField para el email del usuario.
-    @FXML
-    private PasswordField txtPassword; // Password para la contraseña del usuario.
-    @FXML
-    private PasswordField txtConfirmar; // Password para el segundo campo de la contraseña del usuario.
-    @FXML
-    private ImageView btnRegistroImage; // Imagen del botón de registro.
-    @FXML
-    private Button btnRegistro; // Botón de registro.
-    @FXML
-    private ImageView btnVolverImage; // Imagen del botón de volver.
-    @FXML
-    private Button botonOpciones; // Botón de opciones.
-    @FXML
-    private ImageView botonOpcionesImage; // Imagen del botón de opciones.
-    @FXML
-    private Button btnVolver; // Botón de volver.
-    @FXML
-    private ImageView logoImage; // Imagen del logo.
-    @FXML
-    private ImageView btnIdiomaImage; // Imagen del botón de idioma.
-    @FXML
-    private Button btnIdioma; // Botón de idioma.
-    @FXML
-    private Label tituloRegistro; // Texto para título de la pantalla.
-    @FXML
-    private Label textoVolver; // Otro texto para la pantalla.
-    @FXML
-    private StackPane rootRegistro; // Capa raíz.
+    private TextField txtNombre;
 
+    /**
+     * TextField para el email del usuario.
+     */
+    @FXML
+    private TextField txtEmail;
+
+    /**
+     * Password para la contraseña del usuario.
+     */
+    @FXML
+    private PasswordField txtPassword;
+
+    /**
+     * Password para el segundo campo de la contraseña del usuario.
+     */
+    @FXML
+    private PasswordField txtConfirmar;
+
+    /**
+     * Imagen del botón de registro.
+     */
+    @FXML
+    private ImageView btnRegistroImage;
+
+    /**
+     * Botón de registro.
+     */
+    @FXML
+    private Button btnRegistro;
+
+    /**
+     * Imagen del botón de volver.
+     */
+    @FXML
+    private ImageView btnVolverImage;
+
+    /**
+     * Botón de opciones.
+     */
+    @FXML
+    private Button botonOpciones;
+
+    /**
+     * Imagen del botón de opciones.
+     */
+    @FXML
+    private ImageView botonOpcionesImage;
+
+    /**
+     * Botón de volver.
+     */
+    @FXML
+    private Button btnVolver;
+
+    /**
+     * Imagen del logo.
+     */
+    @FXML
+    private ImageView logoImage;
+
+    /**
+     * Imagen del botón de idioma.
+     */
+    @FXML
+    private ImageView btnIdiomaImage;
+
+    /**
+     * Botón de idioma.
+     */
+    @FXML
+    private Button btnIdioma;
+
+    /**
+     * Texto para título de la pantalla.
+     */
+    @FXML
+    private Label tituloRegistro;
+
+    /**
+     * Otro texto para la pantalla.
+     */
+    @FXML
+    private Label textoVolver;
+
+    /**
+     * Capa raíz.
+     */
+    @FXML
+    private StackPane rootRegistro;
+
+    // -------------------------------
+    // ELEMENTOS GENERALES
+    // -------------------------------
     /**
      * Bundle de idioma cargado dinámicamente según la elección del usuario.
      */
@@ -168,7 +237,7 @@ public class RegistroController {
         // Listeners para los botones.
         btnIdioma.setOnAction(e -> cambiarIdioma()); // Cambiamos idioma.
         btnRegistro.setOnAction(e -> registrar()); // Intentamos registrar usuario nuevo.
-        btnVolver.setOnAction(e -> MainApp.cambiarEscena("login.fxml", 600, 400)); // Cambiamos escena a pantalla de Login
+        btnVolver.setOnAction(e -> MainApp.cambiarEscena("login.fxml", 1200, 1000)); // Cambiamos escena a pantalla de Login
         botonOpciones.setOnAction(e -> Animaciones.mostrarPopupSonido(rootRegistro)); // popUp de sonido.
     }
 
@@ -243,7 +312,7 @@ public class RegistroController {
                     MainApp.usuarioActualToken = token;
 
                     // Al ser exitoso el registro del usuario, entramos directamente en el menú principal de la apliación.
-                    MainApp.cambiarEscena("menuPrincipal.fxml", 800, 600);
+                    MainApp.cambiarEscena("menuPrincipal.fxml", 1200, 1000);
                     return;
 
                 case "EMAIL_EXISTS": // Si el email ya existía en Firebase Authentication, error.
@@ -278,13 +347,11 @@ public class RegistroController {
 
     /**
      * Valida el formato del email mediante expresión regular.
-     * 
-     * Debe cumplir:
-     * Una parte inicial con letras o números + (+_.-)
-     * Un solo @
-     * Dominio con letras/numeros/puntos/guiones
-     * Punto final seguido de una extensión de mínimo 2 letras
-     * 
+     *
+     * Debe cumplir: Una parte inicial con letras o números + (+_.-) Un solo @
+     * Dominio con letras/numeros/puntos/guiones Punto final seguido de una
+     * extensión de mínimo 2 letras
+     *
      * @param email El email introducido por el usuario.
      * @return True si es válido, false si no.
      */
@@ -294,13 +361,10 @@ public class RegistroController {
 
     /**
      * Valida la fortaleza de la contraseña mediante expresión regular.
-     * 
-     * Debe cumplir:
-     * Mínimo 6 caracteres.
-     * Al menos 1 letra mayúscula.
-     * Debe contener al menos 2 dígitos.
-     * Debe contener al menos un símbolo especial.
-     * 
+     *
+     * Debe cumplir: Mínimo 6 caracteres. Al menos 1 letra mayúscula. Debe
+     * contener al menos 2 dígitos. Debe contener al menos un símbolo especial.
+     *
      * @param password La contraseña introducida por el usuario.
      * @return True si es válida, false si no.
      */
@@ -309,7 +373,8 @@ public class RegistroController {
     }
 
     /**
-     * Cambia el idioma de la interfaz entre español e inglés y recarga la escena.
+     * Cambia el idioma de la interfaz entre español e inglés y recarga la
+     * escena.
      * <p>
      * Si el usuario está logueado, también actualiza su idioma en Firebase para
      * mantener coherencia entre sesiones.
@@ -338,7 +403,7 @@ public class RegistroController {
         }
 
         // Recargamos la escena para mostrar la pantalla con el idioma cambiado.
-        MainApp.cambiarEscena("registro.fxml", 800, 600);
+        MainApp.cambiarEscena("registro.fxml", 1200, 1000);
     }
 
 }

@@ -6,8 +6,10 @@ import java.util.List;
 
 /**
  * Clase que representa una baraja completa de las cartas utilizadas en Tokaleda
- * Cards Game. Es utilizada en los distintos modos de juego (Pescaito, Yusa)
- * tanto en modo Online como en modo Offline.
+ * Cards Game.
+ *
+ * Es utilizada en los distintos modos de juego (Pescaito, Yusa) tanto en modo
+ * Online como en modo Offline.
  *
  * La baraja se genera automáticamente al crear la instancia de esta clase,
  * incluyendo todas las combinaciones de palos, números e imágenes asociadas a
@@ -28,7 +30,15 @@ import java.util.List;
  * <li> Obtener la lista completa de cartas restantes</li>
  * </ul>
  *
- * @author Javier Coronilla Castellano
+ *
+ * Nota sobre mutabilidad: Esta clase es mutable. Las operaciones
+ * {@link #barajar()} y {@link #robar()} modifican el estado interno de la
+ * baraja. Además, el método {@link #getCartasRestantes()} devuelve la lista
+ * interna, por lo que cualquier modificación externa afectará directamente a la
+ * baraja.
+ *
+ *
+ * @author Javier Coronilla Castellano.
  */
 public class Baraja {
 
@@ -57,7 +67,8 @@ public class Baraja {
      *      /ui/graphicResources/cartas/{palo}_{numero}.png
      * </pre>
      *
-     * Este método solo se ejecuta cuando se quiere construir la baraja.
+     * Este método es privado porque la baraja solo debe generarse una vez, en
+     * el momento de construcción. No se permite regenerarla manualmente
      */
     private void generarBaraja() {
         for (Carta.Palo palo : Carta.Palo.values()) {
@@ -104,6 +115,9 @@ public class Baraja {
     /**
      * Devuelve la lista completa de cartas restantes en la baraja. La lista
      * devuelta es la lista INTERNA.
+     *
+     * Advertencia: la lista devuelta es la lista interna de la baraja.
+     * Modificarla desde fuera alterará el estado real de la baraja.
      *
      * @return Lista de cartas aún no robadas (dentro de la baraja).
      */

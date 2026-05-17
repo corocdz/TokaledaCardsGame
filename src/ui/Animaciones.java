@@ -32,6 +32,8 @@ import javafx.util.Duration;
  * La clase es completamente estática, lo que permite invocar sus métodos desde
  * cualquier controlador sin necesidad de instanciarla.
  * </p>
+ *
+ * @author Javier Coronilla Castellano.
  */
 public class Animaciones {
 
@@ -254,6 +256,35 @@ public class Animaciones {
             loader.setResources(IdiomaManager.getBundle());
 
             StackPane popup = loader.load();
+            root.getChildren().add(popup);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Muestra un popUp de ayuda dentro del contenedor indicado.
+     *
+     * <p>
+     * Carga el FXML correspondiente, aplica la traducción y añade el popUp
+     * sobre el StackPane principal. Animación posible por controller del popUp
+     * Ayuda {link PopUpErrorController}
+     * </p>
+     *
+     * @param root Contenedor donde se insertará el popup.
+     * @param mensaje Texto de ayuda a mostrar.
+     */
+    public static void mostrarAyuda(StackPane root, String mensaje) {
+        try {
+            FXMLLoader loader = new FXMLLoader(Animaciones.class.getResource("/ui/popUpAyuda.fxml"));
+            loader.setResources(IdiomaManager.getBundle());
+
+            StackPane popup = loader.load();
+
+            PopUpAyudaController controller = loader.getController();
+            controller.setMensaje(mensaje);
+
             root.getChildren().add(popup);
 
         } catch (Exception e) {

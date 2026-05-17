@@ -1,11 +1,9 @@
 package ui;
 
+import i18n.IdiomaManager;
 import java.io.IOException;
 import java.util.*;
 import javafx.animation.PauseTransition;
-import javafx.application.Platform;
-import javafx.scene.control.*;
-import javafx.scene.layout.VBox;
 import javafx.util.Duration;
 import partidaUTIL.Juego;
 import partidaUTIL.JuegoPescaito;
@@ -48,17 +46,25 @@ public class PartidaControllerPescaito extends PartidaControllerBase {
      */
     @Override
     protected void onCambioTurno(String nuevoTurno) {
-        narrarGlobal("Turno de: " + nombres.getOrDefault(nuevoTurno, ""));
+        narrarGlobal(
+                IdiomaManager.get(
+                        "pescaitoOnline.global.turnoDe",
+                        nombres.getOrDefault(nuevoTurno, "")
+                )
+        );
+
     }
 
     @Override
     protected void onClickMazo() {
         if (!uidLocal.equals(uidTurnoActual)) {
-            narrarPrivado(uidLocal, "No es tu turno.");
+            narrarPrivado(uidLocal,
+                    IdiomaManager.get("pescaitoOnline.privado.noEsTuTurno"));
             return;
         }
         if (!esperandoRobo) {
-            narrarPrivado(uidLocal, "No puedes robar ahora.");
+            narrarPrivado(uidLocal,
+                    IdiomaManager.get("pescaitoOnline.privado.noPuedesRobar"));
             return;
         }
         realizarRoboManual();
@@ -67,15 +73,18 @@ public class PartidaControllerPescaito extends PartidaControllerBase {
     @Override
     protected void onZonaRivalClick(String uidRival) {
         if (!uidLocal.equals(uidTurnoActual)) {
-            narrarPrivado(uidLocal, "No es tu turno.");
+            narrarPrivado(uidLocal,
+                    IdiomaManager.get("pescaitoOnline.privado.noEsTuTurno"));
             return;
         }
         if (esperandoRobo) {
-            narrarPrivado(uidLocal, "Debes robar antes de continuar.");
+            narrarPrivado(uidLocal,
+                    IdiomaManager.get("pescaitoOnline.privado.debesRobar"));
             return;
         }
         if (numeroSeleccionado == null) {
-            narrarPrivado(uidLocal, "Primero selecciona un número de tu mano.");
+            narrarPrivado(uidLocal,
+                    IdiomaManager.get("pescaitoOnline.privado.seleccionaNumero"));
             return;
         }
         if (uidRival == null || uidRival.equals(uidLocal)) {
@@ -90,14 +99,16 @@ public class PartidaControllerPescaito extends PartidaControllerBase {
                     && e.getValue() != null && !e.getValue().isEmpty());
             if (!hayOtros && !baraja.isEmpty()) {
                 // Nadie tiene cartas → pasar turno automáticamente
-                narrarPrivado(uidLocal, "No hay rivales con cartas. Pasas el turno.");
+                narrarPrivado(uidLocal,
+                        IdiomaManager.get("pescaitoOnline.privado.noRivalesConCartas"));
                 try {
                     bd.actualizarTurno(codigoSala, obtenerSiguienteJugador(uidTurnoActual), idToken);
                 } catch (IOException ex) {
                     ex.printStackTrace();
                 }
             } else {
-                narrarPrivado(uidLocal, "Ese jugador no tiene cartas. Elige otro.");
+                narrarPrivado(uidLocal,
+                        IdiomaManager.get("pescaitoOnline.privado.rivalSinCartas"));
             }
             return;
         }
@@ -109,17 +120,20 @@ public class PartidaControllerPescaito extends PartidaControllerBase {
     @Override
     protected void onCartaLocalClick(String rutaCarta) {
         if (!uidLocal.equals(uidTurnoActual)) {
-            narrarPrivado(uidLocal, "No es tu turno.");
+            narrarPrivado(uidLocal,
+                    IdiomaManager.get("pescaitoOnline.privado.noEsTuTurno"));
             return;
         }
         if (esperandoRobo) {
-            narrarPrivado(uidLocal, "Debes robar antes de continuar.");
+            narrarPrivado(uidLocal,
+                    IdiomaManager.get("pescaitoOnline.privado.debesRobar"));
             return;
         }
 
         int numero = juego.obtenerNumeroCarta(rutaCarta);
         numeroSeleccionado = numero;
-        narrarPrivado(uidLocal, "Has seleccionado el número " + numero + ".\nAhora elige un jugador.");
+        narrarPrivado(uidLocal,
+                IdiomaManager.get("pescaitoOnline.privado.seleccionNumero", numero));
     }
 
     @Override
@@ -153,15 +167,25 @@ public class PartidaControllerPescaito extends PartidaControllerBase {
                 String uidGanador = ganadores.get(0);
                 String nombre = nombres.getOrDefault(uidGanador, "Jugador");
 
-                resultado = "¡Ha ganado " + nombre + "!";
-                detalle = maxPescaitos + " pescaito" + (maxPescaitos != 1 ? "s" : "");
+                resultado = IdiomaManager.get(
+                        "pescaitoOnline.popUpFinal.victoria",
+                        nombre
+                );
+                detalle = IdiomaManager.get(
+                        "pescaitoOnline.popUpFinal.detalleVictoria",
+                        maxPescaitos
+                );
 
                 icono = "/ui/graphicResources/imagenes/imgGanador.png";
 
             } else {
                 // Empate
-                resultado = "¡Empate!";
-                detalle = maxPescaitos + " pescaitos cada uno";
+                resultado = IdiomaManager.get("pescaitoOnline.popUpFinal.empate");
+
+                detalle = IdiomaManager.get(
+                        "pescaitoOnline.popUpFinal.detalleEmpate",
+                        maxPescaitos
+                );
 
                 icono = "/ui/graphicResources/imagenes/imgEmpate.png";
             }
@@ -172,14 +196,14 @@ public class PartidaControllerPescaito extends PartidaControllerBase {
             e.printStackTrace();
             return new DatosPopUp(
                     "/ui/graphicResources/imagenes/imgEmpate.png",
-                    "La partida ha terminado.",
+                    IdiomaManager.get("pescaitoOnline.popUpFinal.finPartida"),
                     ""
             );
         }
     }
 
     // =========================================================================
-    //  ACTUALIZAR MODELO — sobreescribir para llamar a iniciarTurnoLocal()
+    //  ACTUALIZAR MODELO - sobreescribir para llamar a iniciarTurnoLocal()
     // =========================================================================
     /**
      * En Pescaito, tras sincronizar el modelo, si es mi turno inicio el turno
@@ -198,7 +222,7 @@ public class PartidaControllerPescaito extends PartidaControllerBase {
     }
 
     // =========================================================================
-    //  INICIO DE TURNO — exclusivo de Pescaito
+    //  INICIO DE TURNO - exclusivo de Pescaito
     // =========================================================================
     private void iniciarTurnoLocal() throws IOException {
         if (!repartoInicialHecho) {
@@ -226,8 +250,12 @@ public class PartidaControllerPescaito extends PartidaControllerBase {
                     finalizarPartida();
                     return;
                 }
-                narrarGlobal(nombres.getOrDefault(uidLocal, uidLocal)
-                        + " no tiene cartas ni puede robar. Pasa turno.");
+                narrarGlobal(
+                        IdiomaManager.get(
+                                "pescaitoOnline.global.noCartasNoRobar",
+                                nombres.getOrDefault(uidLocal, uidLocal)
+                        )
+                );
                 PauseTransition delay = new PauseTransition(Duration.seconds(1));
                 delay.setOnFinished(ev -> {
                     try {
@@ -241,8 +269,12 @@ public class PartidaControllerPescaito extends PartidaControllerBase {
                 break;
 
             case ROBAR_AUTOMATICO:
-                narrarGlobal(nombres.getOrDefault(uidLocal, uidLocal)
-                        + " no tenía cartas → roba automáticamente del mazo.");
+                narrarGlobal(
+                        IdiomaManager.get(
+                                "pescaitoOnline.global.roboAutomatico",
+                                nombres.getOrDefault(uidLocal, uidLocal)
+                        )
+                );
                 juego.robarCarta(uidLocal, manos, baraja);
                 bd.actualizarMano(codigoSala, uidLocal, manos.get(uidLocal), idToken);
                 bd.actualizarBaraja(codigoSala, baraja, idToken);
@@ -257,14 +289,18 @@ public class PartidaControllerPescaito extends PartidaControllerBase {
                         && !e.getValue().isEmpty());
 
                 if (!hayRivalesConCartas) {
-                    // Nadie tiene cartas — comprobar si hay baraja
+                    // Nadie tiene cartas - comprobar si hay baraja
                     if (!baraja.isEmpty()) {
                         // Hay baraja pero nadie a quien preguntar → pasar turno
                         // Los demás jugadores robarán automáticamente cuando les llegue
                         narrarPrivado(uidLocal,
-                                "No hay jugadores con cartas a quien preguntar.\nPasas el turno.");
-                        narrarGlobal(nombres.getOrDefault(uidLocal, "Jugador")
-                                + " pasa turno: no hay rivales con cartas.");
+                                IdiomaManager.get("pescaitoOnline.privado.noRivalesConCartasTurno"));
+                        narrarGlobal(
+                                IdiomaManager.get(
+                                        "pescaitoOnline.global.pasaSinRivales",
+                                        nombres.getOrDefault(uidLocal, "Jugador")
+                                )
+                        );
                         bd.actualizarTurno(codigoSala,
                                 obtenerSiguienteJugador(uidTurnoActual), idToken);
                     }
@@ -298,19 +334,23 @@ public class PartidaControllerPescaito extends PartidaControllerBase {
     // =========================================================================
     private void ejecutarPregunta() {
         if (!uidLocal.equals(uidTurnoActual)) {
-            narrarPrivado(uidLocal, "No es tu turno.");
+            narrarPrivado(uidLocal,
+                    IdiomaManager.get("pescaitoOnline.privado.noEsTuTurno"));
             return;
         }
         if (esperandoRobo) {
-            narrarPrivado(uidLocal, "Debes robar antes de continuar.");
+            narrarPrivado(uidLocal,
+                    IdiomaManager.get("pescaitoOnline.privado.debesRobar"));
             return;
         }
         if (numeroSeleccionado == null) {
-            narrarPrivado(uidLocal, "No has seleccionado número.");
+            narrarPrivado(uidLocal,
+                    IdiomaManager.get("pescaitoOnline.privado.noHasSeleccionadoNumero"));
             return;
         }
         if (uidJugadorObjetivo == null) {
-            narrarPrivado(uidLocal, "No has seleccionado jugador objetivo.");
+            narrarPrivado(uidLocal,
+                    IdiomaManager.get("pescaitoOnline.privado.noHasSeleccionadoJugador"));
             return;
         }
         if (juego == null) {
@@ -320,8 +360,14 @@ public class PartidaControllerPescaito extends PartidaControllerBase {
         uiBloqueadaPorAccion = true;
         zonaCentro.setDisable(true);
 
-        narrarPrivado(uidLocal, "Has preguntado a " + nombres.get(uidJugadorObjetivo)
-                + "\npor el " + numeroSeleccionado + ".");
+        narrarPrivado(
+                uidLocal,
+                IdiomaManager.get(
+                        "pescaitoOnline.privado.hasPreguntado",
+                        nombres.get(uidJugadorObjetivo),
+                        numeroSeleccionado
+                )
+        );
 
         try {
             Map<String, Object> resultado = ((JuegoPescaito) juego).preguntar(
@@ -357,25 +403,44 @@ public class PartidaControllerPescaito extends PartidaControllerBase {
 
         if (acierto) {
             // Mensaje global para que todos vean qué pasó
-            narrarGlobal(nombres.getOrDefault(uidLocal, uidLocal)
-                    + " le ha preguntado a " + nombres.getOrDefault(uidJugadorObjetivo, uidJugadorObjetivo)
-                    + " por el " + numeroSeleccionado
-                    + " → ¡Lo tenía! Roba " + cartasRecibidas + " carta(s) del " + numeroSeleccionado + ".");
+            narrarGlobal(
+                    IdiomaManager.get(
+                            "pescaitoOnline.global.aciertoPregunta",
+                            nombres.getOrDefault(uidLocal, uidLocal),
+                            nombres.getOrDefault(uidJugadorObjetivo, uidJugadorObjetivo),
+                            numeroSeleccionado,
+                            cartasRecibidas
+                    )
+            );
             if (pescaito) {
                 int numeroPescaito = (int) resultado.get("numeroPescaito");
-                narrarGlobal("¡PESCAITO de " + nombres.getOrDefault(uidLocal, uidLocal)
-                        + "! Número " + numeroPescaito + ". Mantiene turno.");
+                narrarGlobal(
+                        IdiomaManager.get(
+                                "pescaitoOnline.global.pescaitoAcierto",
+                                nombres.getOrDefault(uidLocal, uidLocal),
+                                numeroPescaito
+                        )
+                );
             } else if (mantieneTurno) {
-                narrarPrivado(uidLocal, "Mantienes el turno.");
+                narrarPrivado(
+                        uidLocal,
+                        IdiomaManager.get("pescaitoOnline.privado.mantienesTurno")
+                );
             }
         } else {
-            narrarGlobal(nombres.getOrDefault(uidLocal, uidLocal)
-                    + " le ha preguntado a " + nombres.getOrDefault(uidJugadorObjetivo, uidJugadorObjetivo)
-                    + " por el " + numeroSeleccionado
-                    + " → Fallo. " + nombres.getOrDefault(uidJugadorObjetivo, uidJugadorObjetivo)
-                    + " no tenía el " + numeroSeleccionado + ".");
+            narrarGlobal(
+                    IdiomaManager.get(
+                            "pescaitoOnline.global.falloPregunta",
+                            nombres.getOrDefault(uidLocal, uidLocal),
+                            nombres.getOrDefault(uidJugadorObjetivo, uidJugadorObjetivo),
+                            numeroSeleccionado
+                    )
+            );
             if (debeRobar) {
-                narrarPrivado(uidLocal, "Debes robar una carta del mazo.");
+                narrarPrivado(
+                        uidLocal,
+                        IdiomaManager.get("pescaitoOnline.privado.debesRobarUna")
+                );
             }
         }
 
@@ -387,8 +452,12 @@ public class PartidaControllerPescaito extends PartidaControllerBase {
 
         if (debeRobar) {
             if (baraja.isEmpty()) {
-                narrarGlobal(nombres.getOrDefault(uidLocal, uidLocal)
-                        + " no puede robar — baraja vacía. Pasa turno.");
+                narrarGlobal(
+                        IdiomaManager.get(
+                                "pescaitoOnline.global.noPuedeRobarBarajaVacia",
+                                nombres.getOrDefault(uidLocal, uidLocal)
+                        )
+                );
                 PauseTransition delay = new PauseTransition(Duration.seconds(1));
                 delay.setOnFinished(ev -> {
                     try {
@@ -430,11 +499,13 @@ public class PartidaControllerPescaito extends PartidaControllerBase {
 
     private void realizarRoboManual() {
         if (!uidLocal.equals(uidTurnoActual)) {
-            narrarPrivado(uidLocal, "No es tu turno.");
+            narrarPrivado(uidLocal,
+                    IdiomaManager.get("pescaitoOnline.privado.noEsTuTurno"));
             return;
         }
         if (!esperandoRobo) {
-            narrarPrivado(uidLocal, "No estás obligado a robar.");
+            narrarPrivado(uidLocal,
+                    IdiomaManager.get("pescaitoOnline.privado.noEstasObligadoRobar"));
             return;
         }
 
@@ -452,8 +523,12 @@ public class PartidaControllerPescaito extends PartidaControllerBase {
 
             bd.actualizarMano(codigoSala, uidLocal, mano, idToken);
             bd.actualizarBaraja(codigoSala, baraja, idToken);
-            narrarGlobal(nombres.getOrDefault(uidLocal, uidLocal)
-                    + " roba del mazo."); //narrarPrivado(uidLocal, "Has robado un " + numeroRobado);
+            narrarGlobal(
+                    IdiomaManager.get(
+                            "pescaitoOnline.global.robaDelMazo",
+                            nombres.getOrDefault(uidLocal, uidLocal)
+                    )
+            );
 
             boolean haPescado = ((JuegoPescaito) juego)
                     .haPescadoAlRobar(cartaRobada, numeroPreguntadoAntesDeRobar);
@@ -461,18 +536,26 @@ public class PartidaControllerPescaito extends PartidaControllerBase {
                     .esPescaitoPorRobo(uidLocal, manos, descarte);
 
             if (pescaito) {
-                narrarGlobal("¡PESCAITO de " + nombres.getOrDefault(uidLocal, uidLocal)
-                        + "! Número " + juego.obtenerNumeroCarta(cartaRobada) + ".");
+                narrarGlobal(
+                        IdiomaManager.get(
+                                "pescaitoOnline.global.pescaitoRobo",
+                                nombres.getOrDefault(uidLocal, uidLocal),
+                                juego.obtenerNumeroCarta(cartaRobada)
+                        )
+                );
                 bd.actualizarMano(codigoSala, uidLocal, manos.get(uidLocal), idToken);
                 bd.actualizarDescarte(codigoSala, descarte, idToken);
                 bd.registrarPescaito(codigoSala, uidLocal, juego.obtenerNumeroCarta(cartaRobada), idToken);
             }
 
             if (haPescado) {
-                narrarGlobal("¡"
-                        + nombres.getOrDefault(uidLocal, uidLocal)
-                        + " ha pescado el " + numeroRobado
-                        + "! Mantiene el turno.");
+                narrarGlobal(
+                        IdiomaManager.get(
+                                "pescaitoOnline.global.haPescadoMantiene",
+                                nombres.getOrDefault(uidLocal, uidLocal),
+                                numeroRobado
+                        )
+                );
                 PauseTransition delay = new PauseTransition(Duration.seconds(1));
                 delay.setOnFinished(ev -> {
                     try {
@@ -483,8 +566,12 @@ public class PartidaControllerPescaito extends PartidaControllerBase {
                 });
                 delay.play();
             } else {
-                narrarGlobal(nombres.getOrDefault(uidLocal, uidLocal)
-                        + " no ha pescado. Pasa el turno.");
+                narrarGlobal(
+                        IdiomaManager.get(
+                                "pescaitoOnline.global.noHaPescado",
+                                nombres.getOrDefault(uidLocal, uidLocal)
+                        )
+                );
                 PauseTransition delay = new PauseTransition(Duration.seconds(1));
                 delay.setOnFinished(ev -> {
                     try {
@@ -514,7 +601,7 @@ public class PartidaControllerPescaito extends PartidaControllerBase {
     }
 
     // =========================================================================
-    //  GESTIÓN DE LA UI — exclusiva de Pescaito
+    //  GESTIÓN DE LA UI - exclusiva de Pescaito
     // =========================================================================
     private void activarInteraccion() {
         if (uiBloqueadaPorAccion) {

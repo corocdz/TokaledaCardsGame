@@ -43,7 +43,7 @@
                    AnchorPane.rightAnchor="0"
                    AnchorPane.topAnchor="-80"
                    style="
-                        -fx-font-size: 32px;
+                        -fx-font-size: 26px;
                         -fx-font-weight: bold;
                         -fx-text-fill: white;
                         -fx-background-color: rgba(255, 105, 180, 0.35);

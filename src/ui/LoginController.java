@@ -61,50 +61,124 @@ import ui.audio.ButtonSound;
  * entre sesiones.</li>
  * </ul>
  *
- * @author Javier Coronilla Castellano
+ * @author Javier Coronilla Castellano.
  */
 public class LoginController {
 
     // -------------------------------
     // ELEMENTOS GRÁFICOS
     // -------------------------------
+    /**
+     * TextField para email.
+     */
     @FXML
-    private TextField txtEmail; // TextField para email 
-    @FXML
-    private PasswordField txtPassword; // PasswordField para contraseña
-    @FXML
-    private Button btnLogin; // Botón para iniciar sesión
-    @FXML
-    private Button btnRegistro; // Botón para registrar nueva cuenta
-    @FXML
-    private Button btnLoginJ1; // Botón de inicio de sesión rapido Jugador1 (debug)
-    @FXML
-    private Button btnLoginJ2; // Botón de inicio de sesión rapido Jugador2 (debug)
-    @FXML
-    private Button btnLoginJ3; // Botón de inicio de sesión rapido Jugador3 (debug)
-    @FXML
-    private Button btnLoginJ4; // Botón de inicio de sesión rapido Jugador4 (debug)
-    @FXML
-    private Button botonOpciones; // Botón de opciones
-    @FXML
-    private Button btnIdioma; // Botón de cambiar idioma
-    @FXML
-    private ImageView botonOpcionesImage; // Imagen de botón de opciones
-    @FXML
-    private ImageView logoImage; // Imagen de logo de app
-    @FXML
-    private ImageView btnRegistroImage; // Imagen de botón de registro
-    @FXML
-    private ImageView btnIniciarSesionImage; // Imagen de botón iniciar sesión
-    @FXML
-    private ImageView btnIdiomaImage; // imagen de botón de cambiar idioma
-    @FXML
-    private Label tituloBienvenida; // Texto bienvenida
-    @FXML
-    private Label textoRegistro; // Texto registro
-    @FXML
-    private StackPane rootLogin; // Capa raíz
+    private TextField txtEmail;
 
+    /**
+     * PasswordField para contraseña.
+     */
+    @FXML
+    private PasswordField txtPassword;
+
+    /**
+     * Botón para iniciar sesión.
+     */
+    @FXML
+    private Button btnLogin;
+    
+    /**
+     * Botón para registrar nueva cuenta.
+     */
+    @FXML
+    private Button btnRegistro;
+    
+    /**
+     * Botón de inicio de sesión rapido Jugador1 (debug).
+     */
+    @FXML
+    private Button btnLoginJ1;
+    
+    /**
+     * Botón de inicio de sesión rapido Jugador2 (debug).
+     */
+    @FXML
+    private Button btnLoginJ2;
+    
+    /**
+     * Botón de inicio de sesión rapido Jugador3 (debug).
+     */
+    @FXML
+    private Button btnLoginJ3;
+    
+    /**
+     * Botón de inicio de sesión rapido Jugador4 (debug).
+     */
+    @FXML
+    private Button btnLoginJ4;
+    
+    /**
+     * Botón de opciones.
+     */
+    @FXML
+    private Button botonOpciones;
+    
+    /**
+     * Botón de cambiar idioma.
+     */
+    @FXML
+    private Button btnIdioma;
+    
+    /**
+     * Imagen de botón de opciones.
+     */
+    @FXML
+    private ImageView botonOpcionesImage;
+    
+    /**
+     * Imagen de logo de app.
+     */
+    @FXML
+    private ImageView logoImage;
+    
+    /**
+     * Imagen de botón de registro.
+     */
+    @FXML
+    private ImageView btnRegistroImage;
+    
+    /**
+     * Imagen de botón iniciar sesión.
+     */
+    @FXML
+    private ImageView btnIniciarSesionImage;
+    
+    /**
+     * Imagen de botón de cambiar idioma.
+     */
+    @FXML
+    private ImageView btnIdiomaImage;
+    
+    /**
+     * Texto bienvenida.
+     */
+    @FXML
+    private Label tituloBienvenida;
+    
+    /**
+     * Texto registro.
+     */
+    @FXML
+    private Label textoRegistro;
+    
+    /**
+     * Capa raíz.
+     */
+    @FXML
+    private StackPane rootLogin;
+
+    // -------------------------------
+    // ELEMENTOS GENERALES
+    // -------------------------------
     /**
      * Bundle de idioma cargado dinámicamente según la elección del usuario.
      */
@@ -171,15 +245,16 @@ public class LoginController {
 
         // Listeners para los botones
         btnLogin.setOnAction(e -> login()); // Login 
-        btnRegistro.setOnAction(e -> MainApp.cambiarEscena("registro.fxml", 600, 400)); // Usuario se dirige a la pantalla de Registro Controller.
+        btnRegistro.setOnAction(e -> MainApp.cambiarEscena("registro.fxml", 1200, 1000)); // Usuario se dirige a la pantalla de Registro Controller.
         btnIdioma.setOnAction(e -> cambiarIdioma()); // Cambia el idioma de la aplicación
         botonOpciones.setOnAction(e -> Animaciones.mostrarPopupSonido(rootLogin)); // Abre el popUp para controlar el volumen de la aplicación.
 
+        /*
         // Logins rápidos para el modo debug. Recomendado su uso para tareas de debug.
         btnLoginJ1.setOnAction(e -> loginRapido("jugador1@test.com", "123456"));
         btnLoginJ2.setOnAction(e -> loginRapido("jugador2@test.com", "123456"));
         btnLoginJ3.setOnAction(e -> loginRapido("jugador3@test.com", "123456"));
-        btnLoginJ4.setOnAction(e -> loginRapido("jugador4@test.com", "Coro11."));
+        btnLoginJ4.setOnAction(e -> loginRapido("jugador4@test.com", "Coro11."));*/
     }
 
     /**
@@ -301,7 +376,7 @@ public class LoginController {
             dbService.actualizarCamposUsuario(uid, cambios, token);
 
             // Se cambia la pantalla al menú principal luego del login exitoso.
-            MainApp.cambiarEscena("menuPrincipal.fxml", 800, 600);
+            MainApp.cambiarEscena("menuPrincipal.fxml", 1200, 1000);
             System.out.println("UID en login: " + uid); // debug
 
         } catch (Exception ex) { // Capturamos cualquier posible excepción y la mostramos al usario.
@@ -321,87 +396,89 @@ public class LoginController {
      * @param email Correo electrónico del usuario de prueba.
      * @param password Contraseña del usuario de prueba.
      */
+    /*
     private void loginRapido(String email, String password) {
-        try {
-            String result = authService.login(email, password);
-
-            switch (result) {
-                case "OK":
-                    break;
-
-                case "CREDENCIALES_INCORRECTAS":
-                    Animaciones.mostrarError(rootLogin, bundle.getString("loginController.error.credenciales"));
-                    return;
-
-                case "USER_DISABLED":
-                    Animaciones.mostrarError(rootLogin, bundle.getString("loginController.error.cuentaDesactivada"));
-                    return;
-
-                case "INVALID_EMAIL":
-                    Animaciones.mostrarError(rootLogin, bundle.getString("loginController.error.emailNoValido"));
-                    return;
-
-                case "NETWORK_ERROR":
-                    Animaciones.mostrarError(rootLogin, bundle.getString("loginController.error.desconexion"));
-                    return;
-
-                default:
-                    Animaciones.mostrarError(rootLogin, bundle.getString("loginController.error.desconocido"));
-                    return;
-            }
-
-            String uid = authService.getLocalId();
-            String token = authService.getIdToken();
-            MainApp.usuarioActualUID = uid;
-            MainApp.usuarioActualToken = token;
-
-            String nodoJson = dbService.leerNodo("usuarios/" + uid, token);
-
-            boolean yaConectado = false;
-
-            if (nodoJson != null && !nodoJson.equals("null")) {
-                Map<String, Object> datosExistentes = new com.google.gson.Gson().fromJson(nodoJson, Map.class);
-                if (datosExistentes != null) {
-                    Object conectado = datosExistentes.get("conectado");
-                    if (conectado != null && Boolean.TRUE.equals(conectado)) {
-                        yaConectado = true;
-                    }
-                }
-            }
-
-            if (yaConectado) {
-                Animaciones.mostrarError(rootLogin, bundle.getString("loginController.error.activo"));
-                MainApp.usuarioActualUID = null;
-                MainApp.usuarioActualToken = null;
-                return;
-            }
-
-            Map<String, Object> cambios = new HashMap<>();
-            cambios.put("conectado", true);
-            cambios.put("ultimaConexion", System.currentTimeMillis());
-
-            // SIEMPRE actualizar idioma al iniciar sesión (debug. Esto NO está aplicado para inicios normales con ánimo de utilizar lo guardado en Firebase. Si se quiere cambiar dicho valor en BD, cambiar idioma en pantallas como menú principal.)
-            cambios.put("idioma", IdiomaManager.getCodigoIdioma());
-
-            if (nodoJson == null || nodoJson.equals("null")) {
-                cambios.put("email", email);
-                cambios.put("nombre", "Usuario");
-                cambios.put("avatar", "default.png");
-                cambios.put("idioma", IdiomaManager.getCodigoIdioma());
-            }
-
-            dbService.actualizarCamposUsuario(uid, cambios, token);
-
-            MainApp.cambiarEscena("menuPrincipal.fxml", 800, 600);
-            System.out.println("UID en login rápido: " + uid);
-
-        } catch (Exception ex) {
-            Animaciones.mostrarError(rootLogin, bundle.getString("loginController.error.rapido") + ex.getMessage());
-        }
+    try {
+    String result = authService.login(email, password);
+    
+    switch (result) {
+    case "OK":
+    break;
+    
+    case "CREDENCIALES_INCORRECTAS":
+    Animaciones.mostrarError(rootLogin, bundle.getString("loginController.error.credenciales"));
+    return;
+    
+    case "USER_DISABLED":
+    Animaciones.mostrarError(rootLogin, bundle.getString("loginController.error.cuentaDesactivada"));
+    return;
+    
+    case "INVALID_EMAIL":
+    Animaciones.mostrarError(rootLogin, bundle.getString("loginController.error.emailNoValido"));
+    return;
+    
+    case "NETWORK_ERROR":
+    Animaciones.mostrarError(rootLogin, bundle.getString("loginController.error.desconexion"));
+    return;
+    
+    default:
+    Animaciones.mostrarError(rootLogin, bundle.getString("loginController.error.desconocido"));
+    return;
     }
+    
+    String uid = authService.getLocalId();
+    String token = authService.getIdToken();
+    MainApp.usuarioActualUID = uid;
+    MainApp.usuarioActualToken = token;
+    
+    String nodoJson = dbService.leerNodo("usuarios/" + uid, token);
+    
+    boolean yaConectado = false;
+    
+    if (nodoJson != null && !nodoJson.equals("null")) {
+    Map<String, Object> datosExistentes = new com.google.gson.Gson().fromJson(nodoJson, Map.class);
+    if (datosExistentes != null) {
+    Object conectado = datosExistentes.get("conectado");
+    if (conectado != null && Boolean.TRUE.equals(conectado)) {
+    yaConectado = true;
+    }
+    }
+    }
+    
+    if (yaConectado) {
+    Animaciones.mostrarError(rootLogin, bundle.getString("loginController.error.activo"));
+    MainApp.usuarioActualUID = null;
+    MainApp.usuarioActualToken = null;
+    return;
+    }
+    
+    Map<String, Object> cambios = new HashMap<>();
+    cambios.put("conectado", true);
+    cambios.put("ultimaConexion", System.currentTimeMillis());
+    
+    // SIEMPRE actualizar idioma al iniciar sesión (debug. Esto NO está aplicado para inicios normales con ánimo de utilizar lo guardado en Firebase. Si se quiere cambiar dicho valor en BD, cambiar idioma en pantallas como menú principal.)
+    cambios.put("idioma", IdiomaManager.getCodigoIdioma());
+    
+    if (nodoJson == null || nodoJson.equals("null")) {
+    cambios.put("email", email);
+    cambios.put("nombre", "Usuario");
+    cambios.put("avatar", "default.png");
+    cambios.put("idioma", IdiomaManager.getCodigoIdioma());
+    }
+    
+    dbService.actualizarCamposUsuario(uid, cambios, token);
+    
+    MainApp.cambiarEscena("menuPrincipal.fxml", 1200, 1000);
+    System.out.println("UID en login rápido: " + uid);
+    
+    } catch (Exception ex) {
+    Animaciones.mostrarError(rootLogin, bundle.getString("loginController.error.rapido") + ex.getMessage());
+    }
+    }*/
 
     /**
-     * Cambia el idioma de la interfaz entre español e inglés y recarga la escena.
+     * Cambia el idioma de la interfaz entre español e inglés y recarga la
+     * escena.
      * <p>
      * Si el usuario está logueado, también actualiza su idioma en Firebase para
      * mantener coherencia entre sesiones.
@@ -411,7 +488,7 @@ public class LoginController {
 
         // Obtenemos el código del idioma actual desde el gestor de idiomas.
         String actLenguage = IdiomaManager.getCodigoIdioma();
-        
+
         // Alternamos el idioma. Si está en español pasa a inglés y viceversa.
         String nuevo = actLenguage.equals("es") ? "en" : "es";
 
@@ -430,7 +507,7 @@ public class LoginController {
         }
 
         // Recargamos la escena para mostrar la pantalla con el idioma cambiado.
-        MainApp.cambiarEscena("login.fxml", 800, 600);
+        MainApp.cambiarEscena("login.fxml", 1200, 1000);
     }
 
 }
