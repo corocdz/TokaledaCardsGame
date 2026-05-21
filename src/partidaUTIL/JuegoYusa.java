@@ -453,7 +453,7 @@ public class JuegoYusa implements Juego {
      * <p>
      * Busca el índice de {@code turnoActual} en {@code jugadores} y devuelve el
      * siguiente con el operador módulo para circular:
-     * {@code (idx + 1) % jugadores.size()}.</p>
+     * {@code (index + 1) % jugadores.size()}.</p>
      *
      * <p>
      * Si {@code turnoActual} no está en la lista (eliminado o error), devuelve
@@ -468,11 +468,11 @@ public class JuegoYusa implements Juego {
         if (jugadores == null || jugadores.isEmpty()) {
             return turnoActual;
         }
-        int idx = jugadores.indexOf(turnoActual);
-        if (idx == -1) {
+        int index = jugadores.indexOf(turnoActual);
+        if (index == -1) {
             return jugadores.get(0); // fallback: no encontrado
         }
-        return jugadores.get((idx + 1) % jugadores.size()); // rotación circular
+        return jugadores.get((index + 1) % jugadores.size()); // rotación circular
     }
 
     /**
@@ -856,7 +856,7 @@ public class JuegoYusa implements Juego {
      * del mapa interno. El llamante puede leer los valores pero no modificarlos
      * directamente, protegiendo la integridad del estado del motor.</p>
      *
-     * @return mapa UID → vidas (inmutable)
+     * @return mapa UID - vidas (inmutable)
      */
     public Map<String, Integer> getTodasLasVidas() {
         return Collections.unmodifiableMap(vidas);
@@ -903,7 +903,7 @@ public class JuegoYusa implements Juego {
      * La comprobación {@code entry.getValue() > 0} garantiza que los jugadores
      * con 0 vidas (eliminados) no se añaden a {@link #jugadoresVivos}.</p>
      *
-     * @param vidasBD mapa UID → vidas leído de Firebase
+     * @param vidasBD mapa UID - vidas leído de Firebase
      */
     public void cargarVidasDesdeBD(Map<String, Integer> vidasBD) {
         vidas.clear();

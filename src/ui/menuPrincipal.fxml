@@ -24,7 +24,7 @@
                     <ImageView fx:id="logoImage" fitWidth="600" preserveRatio="true" />
                 </VBox>
             
-                <!-- BOTÓN DE IDIOMA (arriba a la derecha) -->
+                <!-- BOTÓN DE IDIOMA -->
                 <Button fx:id="btnIdioma" style="-fx-background-color: transparent;" StackPane.alignment="TOP_RIGHT"
                         translateX="-20" translateY="20">
                     <graphic>

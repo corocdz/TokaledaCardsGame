@@ -90,7 +90,7 @@ public interface Juego {
      * mientras que el reparto por ronda pueda repetirse tantas veces como sea
      * necesario.</p>
      *
-     * @param manos mapa UID → lista de cartas de cada jugador (puede estar
+     * @param manos mapa UID - lista de cartas de cada jugador (puede estar
      * vacío)
      * @param baraja lista de rutas de imagen del mazo completo, ya barajado
      */
@@ -115,7 +115,7 @@ public interface Juego {
      * {@code baraja}, ambos mutables, por lo que el llamante verá los cambios
      * reflejados inmediatamente después de la llamada.</p>
      *
-     * @param manos mapa UID → lista de cartas que recibirá las cartas
+     * @param manos mapa UID - lista de cartas que recibirá las cartas
      * repartidas
      * @param baraja mazo del que se extraen las cartas (se modifica: se
      * eliminan las repartidas)
@@ -162,7 +162,7 @@ public interface Juego {
      * {@link #puedeRobar} que la operación es válida.</p>
      *
      * @param uidJugador UID del jugador que roba
-     * @param manos mapa UID → lista de cartas (se modifica: se añade la carta
+     * @param manos mapa UID - lista de cartas (se modifica: se añade la carta
      * robada)
      * @param baraja mazo de robo (se modifica: se elimina la carta del top)
      */
@@ -199,7 +199,7 @@ public interface Juego {
      *
      * @param uidJugador UID del jugador que descarta
      * @param carta ruta de imagen de la carta a descartar
-     * @param manos mapa UID → lista de cartas (se modifica: se elimina la
+     * @param manos mapa UID - lista de cartas (se modifica: se elimina la
      * carta)
      * @param baraja mazo de robo (necesario para algunas comprobaciones
      * post-descarte)
@@ -220,7 +220,7 @@ public interface Juego {
      * <p>
      * Busca la posición de {@code turnoActual} en la lista {@code jugadores} y
      * devuelve el siguiente usando el operador módulo para circular al inicio:
-     * {@code jugadores.get((idx + 1) % jugadores.size())}.</p>
+     * {@code jugadores.get((index + 1) % jugadores.size())}.</p>
      *
      * <p>
      * La lista {@code jugadores} puede ser la lista completa de participantes
@@ -259,7 +259,7 @@ public interface Juego {
      * Se llama al final de cada acción relevante (robo, pregunta, cierre de
      * ronda) para detectar el momento exacto en que la partida termina.</p>
      *
-     * @param manos mapa UID → lista de cartas de cada jugador
+     * @param manos mapa UID - lista de cartas de cada jugador
      * @param baraja mazo de robo actual
      * @param descarte pila de descartes actual
      * @return {@code true} si la partida ha terminado y debe mostrarse el
@@ -288,13 +288,13 @@ public interface Juego {
      * determinar quién ganó la partida y construir los datos del popup
      * final.</p>
      *
-     * @param manos mapa UID → lista de cartas final de cada jugador
-     * @return mapa UID → puntuación de cada jugador (mayor = mejor)
+     * @param manos mapa UID - lista de cartas final de cada jugador
+     * @return mapa UID - puntuación de cada jugador (mayor = mejor)
      */
     Map<String, Integer> calcularPuntuaciones(Map<String, List<String>> manos);
 
     // =========================================================================
-    //  MÉTODO DEFAULT — utilidad compartida
+    //  MÉTODO DEFAULT - utilidad compartida
     // =========================================================================
     /**
      * Extrae el número de una carta a partir de su ruta de imagen.
@@ -328,7 +328,7 @@ public interface Juego {
      *
      * <p>
      * <strong>Ejemplo:</strong>
-     * {@code "/ui/graphicResources/cartas/coronas_7.png"} → {@code 7}</p>
+     * {@code "/ui/graphicResources/cartas/coronas_7.png"} - {@code 7}</p>
      *
      * <p>
      * <strong>Precondición:</strong> la ruta debe seguir el formato
@@ -412,7 +412,7 @@ public interface Juego {
      * {@code estadoRonda}.</p>
      *
      * @param uidJugador UID del jugador cuyo turno va a comenzar
-     * @param manos mapa UID → lista de cartas actual
+     * @param manos mapa UID - lista de cartas actual
      * @param baraja mazo de robo actual
      * @return la acción que debe ejecutar el controlador para este jugador
      */

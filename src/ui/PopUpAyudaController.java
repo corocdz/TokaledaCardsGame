@@ -24,6 +24,8 @@ import ui.audio.ButtonSound;
  * <li>Gestionar el cierre del popUp.</li>
  * <li>Activar efectos de sonido y hover en el botón.</li>
  * </ul>
+ * 
+ * * @author Javier Coronilla Castellano
  */
 public class PopUpAyudaController {
 

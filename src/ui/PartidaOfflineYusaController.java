@@ -110,7 +110,7 @@ public class PartidaOfflineYusaController extends PartidaControllerBase {
      * inspeccionar el estado del juego entre acciones de la IA. En producción
      * debe ser {@code false}.
      */
-    private static final boolean MODO_DEBUG_IA = false;
+    private static final boolean MODO_DEBUG_IA = false; // cambiar a true para activar modo debug
 
     // =========================================================================
     //  ESTADO DE PARTIDA
@@ -344,7 +344,7 @@ public class PartidaOfflineYusaController extends PartidaControllerBase {
     }
 
     // =========================================================================
-    //  SOBREESCRITURAS — desactivar Firebase
+    //  SOBREESCRITURAS - desactivar Firebase
     // =========================================================================
     /**
      * Sobreescritura vacía: usar {@link #iniciarOffline(int)} como punto de
@@ -687,7 +687,7 @@ public class PartidaOfflineYusaController extends PartidaControllerBase {
      * <p>
      * El orden respeta el orden global de la sala, rotado desde
      * {@code uidTurnoActual}. El algoritmo de rotación usa el operador módulo:
-     * {@code (idx + i) % ordenJugadoresGlobal.size()} para circular al
+     * {@code (index + i) % ordenJugadoresGlobal.size()} para circular al
      * inicio.</p>
      *
      * <p>
@@ -705,12 +705,12 @@ public class PartidaOfflineYusaController extends PartidaControllerBase {
                         .collect(Collectors.toList());
 
         // Rotado desde uidTurnoActual
-        int idx = ordenJugadoresGlobal.indexOf(uidTurnoActual);
+        int index = ordenJugadoresGlobal.indexOf(uidTurnoActual);
 
         // Rotar la lista para que uidTurnoActual vaya primero
-        // (idx + i) % size: cicla por todos los jugadores comenzando desde idx
+        // (index + i) % size: cicla por todos los jugadores comenzando desde index
         for (int i = 0; i < ordenJugadoresGlobal.size(); i++) {
-            String uid = ordenJugadoresGlobal.get((idx + i) % ordenJugadoresGlobal.size());
+            String uid = ordenJugadoresGlobal.get((index + i) % ordenJugadoresGlobal.size());
             if (participantes.contains(uid)) {
                 ordenDecisiones.add(uid); // Solo añadir los que participan
             }
@@ -797,7 +797,7 @@ public class PartidaOfflineYusaController extends PartidaControllerBase {
                         IdiomaManager.get("yusaOffline.privado.normal.op2"),
                         dec -> {
                             ocultarPanelDecisionLocal();
-                            // Si pulsó op2 (cambiar) → cambia = true
+                            // Si pulsó op2 (cambiar) - cambia = true
                             boolean cambia = dec.equals(IdiomaManager.get("yusaOffline.privado.normal.op2"));
                             avanzarDecisionNormal(UID_JUGADOR, cambia);
                         }
@@ -891,7 +891,7 @@ public class PartidaOfflineYusaController extends PartidaControllerBase {
      * suya.
      *
      * <p>
-     * Si la baraja está vacía, no puede robar → revelar directamente.</p>
+     * Si la baraja está vacía, no puede robar - revelar directamente.</p>
      *
      * <p>
      * {@code computeIfAbsent(uid, k -> new ArrayList<>())}: obtiene la mano si
@@ -1107,7 +1107,7 @@ public class PartidaOfflineYusaController extends PartidaControllerBase {
      *
      * <p>
      * Si la cola está vacía tras el saneamiento, todas las yusas se
-     * respondieron (o todos los poseedores fueron eliminados) → guardar
+     * respondieron (o todos los poseedores fueron eliminados) - guardar
      * snapshot y revelar.</p>
      *
      * <p>
@@ -1405,7 +1405,7 @@ public class PartidaOfflineYusaController extends PartidaControllerBase {
      */
     private void revelarCartas() {
 
-        logEstadoYusa("Revelando cartas — Fase: " + faseRondaActual);
+        logEstadoYusa("Revelando cartas - Fase: " + faseRondaActual);
 
         mostrandoCartas = true; // bloquear actualizarInterfaz() durante la revelación
         mostrarCartasDeRondaLocal();  // dibujar cartas frontales en las zonas
@@ -1876,7 +1876,7 @@ public class PartidaOfflineYusaController extends PartidaControllerBase {
     }
 
     // =========================================================================
-    //  UI — BOTONES DE DECISIÓN
+    //  UI - BOTONES DE DECISIÓN
     // =========================================================================
     /**
      * Muestra dos botones de decisión en la parte inferior de la pantalla.
@@ -2100,9 +2100,9 @@ public class PartidaOfflineYusaController extends PartidaControllerBase {
             nuevoCtrl.iniciarOffline(numIAs);
 
             Stage stage = (Stage) overlayFinal.getScene().getWindow();
-            stage.setMaximized(false);   // 1. Desmaximizar
-            stage.setScene(new Scene(root)); // 2. Cambiar escena
-            stage.setMaximized(true);    // 3. Maximizar de nuevo
+            stage.setMaximized(false);   // Desmaximizar
+            stage.setScene(new Scene(root)); // Cambiar escena
+            stage.setMaximized(true);    // Maximizar de nuevo
             stage.show();
 
         } catch (Exception e) {
@@ -2279,7 +2279,7 @@ public class PartidaOfflineYusaController extends PartidaControllerBase {
                     datos.resultado,
                     datos.detalle,
                     datos.icono,
-                    this // <-- controlador offline actual
+                    this // controlador offline actual
             );
 
             overlayFinal.getChildren().clear();

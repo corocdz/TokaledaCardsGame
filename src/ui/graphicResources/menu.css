@@ -4,7 +4,7 @@
     -fx-background-position: center center;
 }
 
-/* ===== LABEL DE SELECCIÓN DE JUGADORES IA ===== */
+/* LABEL DE SELECCIÓN DE JUGADORES IA */
 #lblJugadoresIA {
     -fx-font-family: "Minecraft";
     -fx-font-size: 42px;
@@ -15,7 +15,7 @@
         dropshadow(gaussian, rgba(255, 105, 180, 0.6), 15, 0.3, 0, 0);
 }
 
-/* ===== TEXTOS DESCRIPTIVOS DE MODOS ===== */
+/* TEXTOS DESCRIPTIVOS DE MODOS */
 .textoModo {
     -fx-font-family: "Minecraft";
     -fx-font-size: 28px;
@@ -28,7 +28,7 @@
 
 
 
-/* ===== COMBOBOX DE JUGADORES IA ===== */
+/* COMBOBOX DE JUGADORES IA */
 #comboJugadoresIA {
     -fx-font-family: "Minecraft";
     -fx-font-size: 30px;

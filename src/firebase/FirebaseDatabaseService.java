@@ -97,8 +97,8 @@ public class FirebaseDatabaseService {
      * <p>
      * Se usa internamente desde
      * {@link #actualizarCamposUsuario(String, Map, String)} tras fusionar los
-     * datos nuevos con los existentes. Así se simula un PATCH seguro: leer →
-     * fusionar → escribir todo con PUT.</p>
+     * datos nuevos con los existentes. Así se simula un PATCH seguro: leer -
+     * fusionar - escribir todo con PUT.</p>
      *
      * @param uid UID del usuario cuyo nodo se crea o reemplaza
      * @param datosUsuario mapa con los campos a guardar (p.ej. nombre,

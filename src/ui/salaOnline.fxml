@@ -111,7 +111,7 @@
 
     </BorderPane>
     
-    <!-- ⭐ BOTÓN OPCIONES FLOTANTE EN ESQUINA SUPERIOR DERECHA ⭐ -->
+    <!-- BOTÓN OPCIONES -->
     <Button fx:id="botonOpciones"
             pickOnBounds="false"
             style="-fx-background-color: transparent;"

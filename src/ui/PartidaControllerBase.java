@@ -53,16 +53,16 @@ import ui.audio.MusicManager;
  *
  * <h2>Métodos que cada subclase DEBE implementar (hooks abstractos)</h2>
  * <ul>
- * <li>{@link #crearJuego(String)} — Instancia el motor de juego concreto.</li>
- * <li>{@link #registrarListenersPropios()} — Registra los listeners de Firebase
+ * <li>{@link #crearJuego(String)} - Instancia el motor de juego concreto.</li>
+ * <li>{@link #registrarListenersPropios()} - Registra los listeners de Firebase
  * específicos del modo (p.ej. estadoRonda en Yusa).</li>
- * <li>{@link #onCambioTurno(String)} — Reacción al cambio de turno global.</li>
- * <li>{@link #onClickMazo()} — Reacción al clic en el mazo de robo.</li>
- * <li>{@link #onZonaRivalClick(String)} — Reacción al clic en la zona de un
+ * <li>{@link #onCambioTurno(String)} - Reacción al cambio de turno global.</li>
+ * <li>{@link #onClickMazo()} - Reacción al clic en el mazo de robo.</li>
+ * <li>{@link #onZonaRivalClick(String)} - Reacción al clic en la zona de un
  * rival.</li>
- * <li>{@link #onCartaLocalClick(String)} — Reacción al clic en una carta
+ * <li>{@link #onCartaLocalClick(String)} - Reacción al clic en una carta
  * propia.</li>
- * <li>{@link #construirDatosPopUpFinal()} — Datos de resultado para el popup
+ * <li>{@link #construirDatosPopUpFinal()} - Datos de resultado para el popup
  * final.</li>
  * </ul>
  *
@@ -506,7 +506,7 @@ public abstract class PartidaControllerBase {
     }
 
     // =========================================================================
-    //  HOOKS ABSTRACTOS — cada subclase los implementa
+    //  HOOKS ABSTRACTOS - cada subclase los implementa
     // =========================================================================
     /**
      * Crea e inicializa el motor de juego concreto según el modo indicado.
@@ -1148,13 +1148,13 @@ public abstract class PartidaControllerBase {
         if (ordenJugadoresGlobal == null || ordenJugadoresGlobal.isEmpty()) {
             return uidActual;
         }
-        int idx = ordenJugadoresGlobal.indexOf(uidActual);
-        if (idx == -1) {
+        int index = ordenJugadoresGlobal.indexOf(uidActual);
+        if (index == -1) {
             // El jugador no está en la lista (eliminado o error): devolver el primero
             return ordenJugadoresGlobal.get(0);
         }
         // Módulo para circular al inicio cuando se llega al final de la lista
-        return ordenJugadoresGlobal.get((idx + 1) % ordenJugadoresGlobal.size());
+        return ordenJugadoresGlobal.get((index + 1) % ordenJugadoresGlobal.size());
     }
 
     /**
@@ -1164,7 +1164,7 @@ public abstract class PartidaControllerBase {
      * Funciona tanto para pescaitos (conteo de grupos completados) como para
      * vidas restantes en Yusa (mayor número de vidas = ganador).</p>
      *
-     * @param puntuaciones mapa UID → puntuación entera
+     * @param puntuaciones mapa UID - puntuación entera
      * @return UID del jugador con la puntuación más alta, o {@code null} si el
      * mapa está vacío
      */
@@ -1617,7 +1617,7 @@ public abstract class PartidaControllerBase {
     }
 
     // =========================================================================
-    //  DIBUJO DE ABANICOS — idénticos en todos los modos
+    //  DIBUJO DE ABANICOS - idénticos en todos los modos
     // =========================================================================
     /**
      * Dibuja el abanico de cartas del jugador local en la zona inferior.

@@ -30,7 +30,7 @@
                     <ImageView fx:id="logoImage" fitWidth="600" preserveRatio="true" />
                 </VBox>
 
-                <!-- BOTÓN OPCIONES (arriba derecha, un poco más a la izquierda) -->
+                <!-- BOTÓN OPCIONES -->
                 <Button fx:id="botonOpciones"
                         pickOnBounds="false"
                         style="-fx-background-color: transparent;"
@@ -45,7 +45,7 @@
                     </graphic>
                 </Button>
 
-                <!-- BOTÓN IDIOMA (arriba derecha, como antes) -->
+                <!-- BOTÓN IDIOMA -->
                 <Button fx:id="btnIdioma"
                         pickOnBounds="false"
                         style="-fx-background-color: transparent;"

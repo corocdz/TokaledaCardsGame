@@ -14,8 +14,6 @@
     -fx-font-weight: bold;
     -fx-text-fill: white;
 
-    /* TRAZADO ROSA OSCURO MUY MARCADO */
-    /* Contorno grueso simulado con doble sombra */
     -fx-effect: dropshadow(gaussian, rgba(120, 0, 60, 1), 12, 0.9, 0, 0),
         dropshadow(gaussian, rgba(120, 0, 60, 1), 12, 0.9, 0, 0),
         dropshadow(gaussian, rgba(255, 105, 180, 0.6), 25, 0.4, 0, 0);
@@ -46,11 +44,11 @@
 
 /* Lista de jugadores */
 #listaJugadores {
-    -fx-background-color: rgba(180, 30, 90, 0.55); /* rosa oscuro */
-    -fx-control-inner-background: rgba(150, 20, 70, 0.45); /* interior más oscuro */
+    -fx-background-color: rgba(180, 30, 90, 0.55); 
+    -fx-control-inner-background: rgba(150, 20, 70, 0.45);
     -fx-background-radius: 12;
     -fx-border-radius: 12;
-    -fx-border-color: rgba(255, 255, 255, 0.35); /* borde suave blanco */
+    -fx-border-color: rgba(255, 255, 255, 0.35);
     -fx-text-fill: white;
 }
 
@@ -94,17 +92,15 @@
     -fx-background-radius: 10;
 }
 
-/* Estilo del popup (las opciones del menú) */
+/* Estilo del popup */
 .combo-box .list-cell {
     -fx-font-family: "Minecraft";
     -fx-font-size: 24px;
     -fx-text-fill: white;
-
-    /* Fondo más oscuro para que el texto destaque */
+    
     -fx-background-color: rgba(80, 0, 40, 0.65);
     -fx-background-radius: 8;
-
-    /* Contorno suave del texto */
+    
     -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.8), 4, 0.3, 0, 0);
 }
 

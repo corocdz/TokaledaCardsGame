@@ -473,11 +473,11 @@ public class JuegoPescaito implements Juego {
      * Busca el índice de {@code turnoActual} en {@code jugadores} y devuelve el
      * elemento siguiente usando el operador módulo para circular al inicio:</p>
      * <pre>
-     * siguiente = (idx + 1) % jugadores.size()
+     * siguiente = (index + 1) % jugadores.size()
      * </pre>
      * <p>
-     * Cuando {@code idx} es el último índice de la lista,
-     * {@code (idx + 1) % size} devuelve 0 (el primero), completando la rotación
+     * Cuando {@code index} es el último índice de la lista,
+     * {@code (index + 1) % size} devuelve 0 (el primero), completando la rotación
      * circular.</p>
      *
      * <p>
@@ -494,12 +494,12 @@ public class JuegoPescaito implements Juego {
             return turnoActual; // lista vacía: devolvemos el mismo para no fallar
         }
 
-        int idx = jugadores.indexOf(turnoActual);
-        if (idx == -1) {
+        int index = jugadores.indexOf(turnoActual);
+        if (index == -1) {
             return jugadores.get(0); // no encontrado: primer jugador como fallback
         }
 
-        int siguiente = (idx + 1) % jugadores.size(); // módulo para circular
+        int siguiente = (index + 1) % jugadores.size(); // módulo para circular
         return jugadores.get(siguiente);
     }
 
